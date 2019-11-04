@@ -1,0 +1,5 @@
+*_test.rb
+.git/
+.idea/
+.bundle/
+vendor/
