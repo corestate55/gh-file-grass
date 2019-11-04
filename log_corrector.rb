@@ -2,6 +2,7 @@
 
 require 'git'
 require 'json'
+require 'optparse'
 
 class GitLogEntryFile
   def initialize(diff_file, diff_stat, diff_stat_path)
@@ -18,12 +19,10 @@ class GitLogEntryFile
       type: @file.type,
       src: @file.src,
       dst: @file.dst,
-      stat: {
-        path: @stat_path,
-        insertions: @stat[:insertions],
-        deletions: @stat[:deletions],
-        lines: @stat[:insertions] + @stat[:deletions]
-      }
+      stat_path: @stat_path,
+      insertions: @stat[:insertions],
+      deletions: @stat[:deletions],
+      lines: @stat[:insertions] + @stat[:deletions]
     }
   end
 end
@@ -84,18 +83,18 @@ class GitLogEntry
 end
 
 class GitLog
-  def initialize(name, repository)
-    @name = name
+  def initialize(repository, count = 5)
     @git = Git.open(repository)
+    @count = count || nil
     set_repo_info
     set_repo_logs
   end
 
   def to_data
     {
-      name: @name,
+      repo: @git.repo,
       branch: @branch,
-      logs: @logs.map { |l| l.to_data }
+      commits: @logs.map { |l| l.to_data }
     }
   end
 
@@ -103,7 +102,7 @@ class GitLog
 
   def set_repo_logs
     # logs(count = nil) gets all logs
-    @logs = @git.log(nil).map { |log| GitLogEntry.new(log) }
+    @logs = @git.log(@count).map { |log| GitLogEntry.new(log) }
   end
 
   def set_repo_info
@@ -111,5 +110,10 @@ class GitLog
   end
 end
 
-git_log = GitLog.new('netoviz', '~/nwmodel/netoviz')
+# "Usage: [bundle exec] ruby #{$0} [-r /path/to/repo-dir] [-n count]"
+params = ARGV.getopts('r:n:')
+repo_path = params['r'] || '.' # optional, default:current dir
+count = params['n'] || nil # optional, default:nil use all logs
+
+git_log = GitLog.new(repo_path, count)
 puts JSON.pretty_generate(git_log.to_data)

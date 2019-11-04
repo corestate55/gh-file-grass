@@ -1,4 +1,7 @@
 *_test.rb
+*.log
+*.json
+
 .git/
 .idea/
 .bundle/
