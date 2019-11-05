@@ -4,6 +4,7 @@ require 'git'
 require 'json'
 require 'optparse'
 
+# property of a file in a log entry
 class GitLogEntryFile
   def initialize(diff_file, diff_stat, diff_stat_path)
     @file = diff_file
@@ -12,6 +13,7 @@ class GitLogEntryFile
     throw Error unless @stat
   end
 
+  # rubocop:disable Metrics/MethodLength
   def to_data
     {
       path: @file.path,
@@ -25,8 +27,10 @@ class GitLogEntryFile
       lines: @stat[:insertions] + @stat[:deletions]
     }
   end
+  # rubocop:enable Metrics/MethodLength
 end
 
+# a log entry
 class GitLogEntry
   def initialize(log)
     @log = log
@@ -35,10 +39,13 @@ class GitLogEntry
     @diff_stat_files = diff_stats[:files]
     @diff_files = log.diff_parent.map do |diff_file|
       diff_stat_path = find_diff_stat(diff_file.path)
-      GitLogEntryFile.new(diff_file, @diff_stat_files[diff_stat_path], parse_moved_file(diff_stat_path))
+      diff_stat = @diff_stat_files[diff_stat_path]
+      parsed_diff_stat_path = parse_moved_file(diff_stat_path)
+      GitLogEntryFile.new(diff_file, diff_stat, parsed_diff_stat_path)
     end
   end
 
+  # rubocop:disable Metrics/MethodLength
   def to_data
     {
       sha: @log.sha,
@@ -51,26 +58,28 @@ class GitLogEntry
       message: @log.message,
       stat: {
         total: @diff_stat_total,
-        files: @diff_files.map { |d| d.to_data }
+        files: @diff_files.map(&:to_data)
       }
     }
   end
+  # rubocop:enable Metrics/MethodLength
 
   private
 
+  def make_stats_path(path, src, dst)
+    { path: path, src: src, dst: dst }
+  end
+
   def parse_moved_file(stats_path)
     if stats_path =~ /({(.+)? => (.+)?})/
-      changed, src, dst = $1, $2, $3
-      {
-        path: stats_path,
-        src: stats_path.sub(changed, src || ''),
-        dst: stats_path.sub(changed, dst || '')
-      }
+      changed = Regexp.last_match(1)
+      src = stats_path.sub(changed, Regexp.last_match(2) || '')
+      dst = stats_path.sub(changed, Regexp.last_match(3) || '')
+      make_stats_path(stats_path, src, dst)
     elsif stats_path =~ /(.+) => (.+)/
-      src, dst = $1, $2
-      { path: stats_path, src: src, dst: dst }
+      make_stats_path(stats_path, Regexp.last_match(1), Regexp.last_match(2))
     else
-      { path: stats_path, src: stats_path, dst: stats_path } # dummy
+      make_stats_path(stats_path, stats_path, stats_path) # dummy
     end
   end
 
@@ -82,6 +91,7 @@ class GitLogEntry
   end
 end
 
+# container of logs: repository level
 class GitLog
   def initialize(repository, count = 5)
     @git = Git.open(repository)
@@ -97,7 +107,7 @@ class GitLog
       branch: @git.branch.full,
       commits: reconstruct_commits,
       stats: @stats,
-    files: @file_table
+      files: @file_table
     }
   end
 
@@ -106,7 +116,7 @@ class GitLog
   def make_commits
     # logs(count = nil) gets all logs
     commits = @git.log(@count).map { |log| GitLogEntry.new(log).to_data }
-    commits.each_with_index { |commit, i | commit[:index] = commits.length - i }
+    commits.each_with_index { |commit, i| commit[:index] = commits.length - i }
     commits
   end
 
@@ -144,9 +154,9 @@ end
 
 # "Usage: [bundle exec] ruby #{$0} [-r /path/to/repo-dir] [-n count]"
 params = ARGV.getopts('r:n:p')
-repo_path = params['r'] || '.' # optional, default: current dir
-count = params['n'] || nil # optional, default: nil = use all logs
-pretty_print = params['p'] || nil # optional, default: nil = disable pretty print
+repo_path = params['r'] || '.' # optional, default:. = current dir
+count = params['n'] || nil # optional, default:nil = use all logs
+pretty_print = params['p'] || nil # optional, default:nil = disable pretty print
 
 git_log = GitLog.new(repo_path, count)
 if pretty_print
