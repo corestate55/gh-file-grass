@@ -86,34 +86,71 @@ class GitLog
   def initialize(repository, count = 5)
     @git = Git.open(repository)
     @count = count || nil
-    set_repo_info
-    set_repo_logs
+    @commits = make_commits
+    @stats = make_stats
+    @file_table = make_file_table
   end
 
   def to_data
     {
       repo: @git.repo,
-      branch: @branch,
-      commits: @logs.map { |l| l.to_data }
+      branch: @git.branch.full,
+      commits: reconstruct_commits,
+      stats: @stats,
+    files: @file_table
     }
   end
 
   private
 
-  def set_repo_logs
+  def make_commits
     # logs(count = nil) gets all logs
-    @logs = @git.log(@count).map { |log| GitLogEntry.new(log) }
+    commits = @git.log(@count).map { |log| GitLogEntry.new(log).to_data }
+    commits.each_with_index { |commit, i | commit[:index] = commits.length - i }
+    commits
   end
 
-  def set_repo_info
-    @branch = @git.branch.full
+  def make_stats
+    stats = @commits.map do |commit|
+      commit[:stat][:files].map do |stat_file|
+        stat_file[:sha_short] = commit[:sha_short]
+        stat_file
+      end
+    end
+    stats.flatten
+  end
+
+  def make_file_table
+    file_table = {}
+    @stats.each do |stat|
+      if file_table[stat[:path]]
+        file_table[stat[:path]].push(stat[:sha_short])
+      else
+        file_table[stat[:path]] = [stat[:sha_short]]
+      end
+    end
+    file_table
+  end
+
+  def reconstruct_commits
+    # move [stat][total] to [stat_total]
+    # and delete [stat][files] it was followed as @stats array.
+    @commits.each do |commit|
+      commit[:stat_total] = commit[:stat][:total] # rename
+      commit.delete(:stat)
+    end
   end
 end
 
 # "Usage: [bundle exec] ruby #{$0} [-r /path/to/repo-dir] [-n count]"
-params = ARGV.getopts('r:n:')
-repo_path = params['r'] || '.' # optional, default:current dir
-count = params['n'] || nil # optional, default:nil use all logs
+params = ARGV.getopts('r:n:p')
+repo_path = params['r'] || '.' # optional, default: current dir
+count = params['n'] || nil # optional, default: nil = use all logs
+pretty_print = params['p'] || nil # optional, default: nil = disable pretty print
 
 git_log = GitLog.new(repo_path, count)
-puts JSON.pretty_generate(git_log.to_data)
+if pretty_print
+  puts JSON.pretty_generate(git_log.to_data)
+else
+  puts JSON.generate(git_log.to_data)
+end
