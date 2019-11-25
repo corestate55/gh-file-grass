@@ -1,0 +1,10 @@
+text {
+    font-size: 10pt;
+}
+text.gh-file-label {
+    text-anchor: end;
+}
+
+text.gh-commit-label {
+    text-anchor: start;
+}

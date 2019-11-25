@@ -8,8 +8,8 @@ bundle install
 ```
 bundle exec ./bin/log_corrector.rb -r /path/to/repository > ./public/logs.json
 ```
-Option:
-* `-c COUNT`: length of logs
+Options:
+* `-n COUNT`: number of logs
 * `-p`: pretty-print
 
 

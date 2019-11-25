@@ -1,3 +1,6 @@
+# test data
+public/logs.json
+
 # for ruby
 .bundle/
 vendor/

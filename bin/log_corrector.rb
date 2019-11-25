@@ -139,7 +139,13 @@ class GitLog
         file_table[stat[:path]] = [stat[:sha_short]]
       end
     end
-    file_table
+    file_table.keys.sort.map.with_index do |file, index|
+      {
+        name: file,
+        index: index + 1,
+        commits: file_table[file]
+      }
+    end
   end
 
   def reconstruct_commits
