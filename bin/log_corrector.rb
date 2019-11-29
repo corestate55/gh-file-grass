@@ -18,16 +18,24 @@ class GitLogEntryFile
     {
       path: @file.path,
       mode: @file.mode,
-      type: @file.type,
-      src: @file.src,
-      dst: @file.dst,
+      type: invert_type,
+      src: @file.dst, # invert src/dst
+      dst: @file.src,
       stat_path: @stat_path,
-      insertions: @stat[:insertions],
-      deletions: @stat[:deletions],
+      insertions: @stat[:deletions], # invert insertions/deletions
+      deletions: @stat[:insertions],
       lines: @stat[:insertions] + @stat[:deletions]
     }
   end
   # rubocop:enable Metrics/MethodLength
+
+  private
+
+  def invert_type
+    type = @file.type
+    return type if type == 'modified'
+    type == 'new' ? 'deleted' : 'new'
+  end
 end
 
 # a log entry

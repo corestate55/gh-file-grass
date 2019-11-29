@@ -108,8 +108,8 @@ export default class GHFileGrass {
       .data(this.files)
       .enter()
       .append('text')
-      .attr('id', d => d.name)
-      .attr('class', 'gh-file-label')
+      .attr('id', d => `file-${d.index}-label`)
+      .attr('class', d => `file-label file-${d.index}`)
       .attr('x', d => this._px(0, d))
       .attr('y', d => this._py(d.index, d))
       .attr('dy', this.fontSize)
@@ -122,13 +122,40 @@ export default class GHFileGrass {
       .data(this.commits)
       .enter()
       .append('text')
-      .attr('id', d => d.sha_short)
-      .attr('class', 'gh-commit-label')
+      .attr('id', d => `commit-${d.index}-label`)
+      .attr('class', d => `commit-label commit-${d.index}`)
       .attr('x', d => this._px(d.index, d))
       .attr('y', d => this._py(0, d))
       .attr('dx', this.fontSize)
       .attr('transform', d => `rotate(-60,${d.px},${d.py})`)
       .text(d => d.sha_short)
+  }
+
+  _findStatsBy(file, type) {
+    return this.stats.find(d => d.path === file && d.type === type)
+  }
+
+  _makeFileLifeStatsRect() {
+    for (const file of this.files) {
+      const startStats = this._findStatsBy(file.name, 'new')
+      const startIndex = startStats ? this._indexOfCommit(startStats.sha_short) : 1
+      const endStats = this._findStatsBy(file.name, 'deleted')
+      const endIndex = endStats ? this._indexOfCommit(endStats.sha_short) : this.commits.length
+      const range = Array.from(
+        {length: endIndex - startIndex + 1},
+        (_, i) => ({ index: i + startIndex })
+      )
+      this.clippedStatsGroup
+        .selectAll(`rect.file-${file.index}`)
+        .data(range)
+        .enter()
+        .append('rect')
+        .attr('class', `file-life file-${file.index}`)
+        .attr('x', d => this._px(d.index, d))
+        .attr('y', d => this._py(file.index, d))
+        .attr('width', this.lc)
+        .attr('height', this.lc)
+    }
   }
 
   _makeStatsRect() {
@@ -152,8 +179,8 @@ export default class GHFileGrass {
     return this._py(this._indexOfFile(stat.path), stat)
   }
 
-  _indexOfCommit(key) {
-    return this.commits.map(d => d.sha_short).indexOf(key) + 1
+  _indexOfCommit(sha_short) {
+    return this.commits.map(d => d.sha_short).indexOf(sha_short) + 1
   }
 
   _indexOfFile(key) {
@@ -195,6 +222,7 @@ export default class GHFileGrass {
     this._makeSVGCanvas()
     this._makeFileLabels()
     this._makeCommitLabels()
+    this._makeFileLifeStatsRect()
     this._makeStatsRect()
     this._addDragToGroups()
   }

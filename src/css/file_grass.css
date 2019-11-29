@@ -1,10 +1,14 @@
 text {
     font-size: 10pt;
 }
-text.gh-file-label {
+text.file-label {
     text-anchor: end;
 }
 
-text.gh-commit-label {
+text.commit-label {
     text-anchor: start;
+}
+
+rect.file-life {
+    fill: lightgrey;
 }
