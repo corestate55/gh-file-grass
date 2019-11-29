@@ -10,30 +10,40 @@ export default class GHFileGrass {
     this.logUri = logUri
   }
 
-  _makeSVGCanvas(width, height) {
-    select('#gh-file-grass')
+  _makeSVGCanvas() {
+    this.svg = select('#gh-file-grass')
       .append('svg')
       .attr('id', 'gh-file-grass-canvas')
-      .attr('width', width)
-      .attr('height', height)
+      .attr('width', this.width0)
+      .attr('height', this.height0)
+    this.gStats = this.svg
+      .append('g')
+      .attr('id', 'stats-group')
+      .attr('transform', `translate(${this.px0},${this.py0})`)
+    this.gFiles = this.gStats
+      .append('g')
+      .attr('id', 'files-group')
+    this.gCommits = this.gStats
+      .append('g')
+      .attr('id', 'commits-group')
   }
 
   _makeFileLabels() {
-    this._svgOrigin()
+    this.gFiles
       .selectAll('text.gh-file-label')
       .data(this.files)
       .enter()
       .append('text')
       .attr('id', d => d.name)
       .attr('class', 'gh-file-label')
-      .attr('x', this._px(0))
+      .attr('x', 0)
       .attr('y', d => this._py(d.index))
       .attr('dy', this.fontSize)
       .text(d => d.name)
   }
 
   _makeCommitLabels() {
-    this._svgOrigin()
+    this.gCommits
       .selectAll('text.gh-commit-label')
       .data(this.commits)
       .enter()
@@ -41,14 +51,14 @@ export default class GHFileGrass {
       .attr('id', d => d.sha_short)
       .attr('class', 'gh-commit-label')
       .attr('x', d => this._px(d.index))
-      .attr('y', this._py(0))
+      .attr('y', 0)
       .attr('dx', this.fontSize)
       .attr('transform', d => `rotate(-60,${this._px(d.index)},${this._py(0)})`)
       .text(d => d.sha_short)
   }
 
   _makeStatsRect() {
-    this._svgOrigin()
+    this.gStats
       .selectAll('rect.gh-stats')
       .data(this.stats)
       .enter()
@@ -76,16 +86,12 @@ export default class GHFileGrass {
     return this.files.map(d => d.name).indexOf(key) + 1
   }
 
-  _svgOrigin() {
-    return select('svg#gh-file-grass-canvas')
-  }
-
   _px(i) {
-    return this.px0 + i * (this.lc + this.dc)
+    return i * (this.lc + this.dc)
   }
 
   _py(i) {
-    return this.py0 + i * (this.lc + this.dc)
+    return i * (this.lc + this.dc)
   }
 
   async draw() {
@@ -95,10 +101,12 @@ export default class GHFileGrass {
     this.stats = data.stats
 
     this.px0 = Math.max(...this.files.map(d => d.name.length)) * this.fontSize * 0.7
-    this.width = this._px(this.commits.length) * 1.2
-    this.height = this._py(this.files.length)
+    this.width0 = this._px(this.commits.length) * 1.3
+    this.height0 = this._py(this.files.length)
+    // this.width1 = this.width0 - this.px0
+    // this.height1 = this.height0 - this.py0
 
-    this._makeSVGCanvas(this.width, this.height)
+    this._makeSVGCanvas()
     this._makeFileLabels()
     this._makeCommitLabels()
     this._makeStatsRect()
