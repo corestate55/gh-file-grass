@@ -14,7 +14,8 @@ rect.file-life {
 }
 
 path {
-    stroke: lightseagreen;
+    stroke: limegreen;
+    stroke-width: 2pt;
     stroke-opacity: 0.5;
     fill: none;
 }

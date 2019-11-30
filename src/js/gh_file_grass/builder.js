@@ -50,10 +50,12 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
   _lifeStartIndex(file) {
     const stat1 = this._findStatByFileAndType(file.name, 'new')
     if (stat1) {
+      // console.log(`- start-1: `, stat1)
       return this._indexOfCommit(stat1.sha_short)
     }
     const stat2 = this._findStatByFileAndRenamed(file.name)
     if (stat2) {
+      // console.log('- start-2: ', stat2)
       return this._indexOfCommit(stat2.sha_short)
     }
     return 1
@@ -70,10 +72,12 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
   _lifeEndIndex(file) {
     const stat1 = this._findStatByFileAndType(file.name, 'deleted')
     if (stat1) {
+      // console.log('- end-1: ', stat1)
       return this._indexOfCommit(stat1.sha_short)
     }
     const stat2 = this._findStatsByFile(file.name).find(d => this._isDstStatRenamed(d))
     if (stat2) {
+      // console.log('- end-2: ', stat2)
       return this._indexOfCommit(stat2.sha_short)
     }
     return this.commits.length
@@ -81,8 +85,10 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
 
   _makeFileLifeStatsRect() {
     for (const file of this.files) {
+      // console.log(`file: ${file.name}`)
       const startIndex = this._lifeStartIndex(file)
       const endIndex = this._lifeEndIndex(file)
+      // console.log(`- start:${startIndex}, end:${endIndex}`)
       const range = Array.from(
         {length: endIndex - startIndex + 1},
         (_, i) => ({ index: i + startIndex })

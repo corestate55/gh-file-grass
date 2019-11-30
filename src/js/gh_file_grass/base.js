@@ -36,8 +36,8 @@ export default class GHFileGrassBase {
     this.stats = data.stats
 
     this.px0 = this._maxFileLength() * this.fontSize * 0.7
-    this.width0 = this.px0 + this._px(this.commits.length) * 1.2
-    this.height0 = this.py0 + this._py(this.files.length)
+    this.width0 = this.px0 + this._px(this.commits.length) + 50
+    this.height0 = this.py0 + this._py(this.files.length) + 50
     this.width1 = this.width0 - this.px0
     this.height1 = this.height0 - this.py0
   }

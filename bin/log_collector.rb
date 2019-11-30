@@ -29,6 +29,22 @@ class GitLogEntryFile
   end
   # rubocop:enable Metrics/MethodLength
 
+  def insertions
+    @stat[:deletions]
+  end
+
+  def deletions
+    @stat[:insertions]
+  end
+
+  def path
+    @file.path
+  end
+
+  def type
+    invert_type
+  end
+
   private
 
   def invert_type
@@ -42,15 +58,18 @@ end
 class GitLogEntry
   def initialize(log)
     @log = log
-    diff_stats = log.diff_parent.stats
-    @diff_stat_total = diff_stats[:total]
-    @diff_stat_files = diff_stats[:files]
-    @diff_files = log.diff_parent.map do |diff_file|
+
+    diff = @log.diff_parent
+    @diff_stat_total = diff.stats[:total]
+    @diff_stat_files = diff.stats[:files]
+
+    @diff_files = @log.diff_parent.map do |diff_file|
       diff_stat_path = find_diff_stat(diff_file.path)
       diff_stat = @diff_stat_files[diff_stat_path]
       parsed_diff_stat_path = parse_moved_file(diff_stat_path)
       GitLogEntryFile.new(diff_file, diff_stat, parsed_diff_stat_path)
     end
+    debug_print
   end
 
   # rubocop:disable Metrics/MethodLength
@@ -73,6 +92,14 @@ class GitLogEntry
   # rubocop:enable Metrics/MethodLength
 
   private
+
+  def debug_print
+    warn "commit: #{@log.sha}"
+    warn "- parents: #{@log.parents.map { |c| c.sha }}"
+    @diff_files.each do |file|
+      warn "- file: #{file.path} | #{file.type} (+#{file.insertions},-#{file.deletions})"
+    end
+  end
 
   def make_stats_path(path, src, dst)
     { path: path, src: src, dst: dst }
@@ -123,7 +150,12 @@ class GitLog
 
   def make_commits
     # logs(count = nil) gets all logs
-    commits = @git.log(@count).map { |log| GitLogEntry.new(log).to_data }
+    # TODO: first commit:
+    #   ignore first commit (it doesn't have parent)
+    #   because `diff_parent` for the log returns "diff initial-commit current"...
+    commits = @git.log(@count)
+                .select { |log| !log.parent.nil? }
+                .map { |log| GitLogEntry.new(log).to_data }
     commits.each_with_index { |commit, i| commit[:index] = commits.length - i }
     commits
   end
