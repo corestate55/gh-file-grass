@@ -64,7 +64,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
   _isDstStatRenamed(stat) {
     const dstStat = this._findDstStat(stat)
     if (dstStat) {
-      return this._isRenamedStat(dstStat)
+      return this._isRenamedStat(dstStat) || stat.path !== dstStat.path
     }
     return false
   }
