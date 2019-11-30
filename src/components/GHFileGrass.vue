@@ -11,8 +11,8 @@ export default {
     fileGrass: null
   }),
   mounted() {
-    this.fileGrass = new GHFileGrass('./logs.json')
-    this.fileGrass.draw()
+    this.fileGrass = new GHFileGrass()
+    this.fileGrass.draw('./logs.json')
   }
 }
 </script>
