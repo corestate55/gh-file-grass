@@ -11,62 +11,45 @@ export default class GHFileGrass {
     this.logUri = logUri
   }
 
-  _makeCommitsGroup() {
-    // Commits : X-Axis
-    this.commitsGroup = this.svg
+  _makeGroups() {
+    const groupData = [
+      {
+        keyword: 'commits', px: this.px0, py: this.py0,
+        clipPath: {
+          x: 0, y: -this.py0, width: this.width1, height: this.py0
+        }
+      },
+      {
+        keyword: 'files', px: this.px0, py: this.py0,
+        clipPath: {
+          x: -this.px0, y: 0, width: this.px0, height: this.height1
+        }
+      },
+      {
+        keyword: 'stats', px: this.px0, py: this.py0,
+        clipPath: {
+          x: 0, y: 0, width: this.width1, height: this.height1
+        }
+      }
+    ]
+    const groups = this.svg.selectAll('g')
+      .data(groupData)
+      .enter()
       .append('g')
-      .attr('id', 'commits-group')
-      .attr('transform', `translate(${this.px0},${this.py0})`)
-    this.commitsGroup
+      .attr('id', d => `${d.keyword}-group`)
+      .attr('transform', d => `translate(${d.px},${d.py})`)
+    groups
       .append('defs')
       .append('SVG:clipPath')
-      .attr('id', 'commits-clip')
+      .attr('id', d => `${d.keyword}-clip`)
       .append('rect')
-      .attr('x', 0)
-      .attr('y', -this.py0)
-      .attr('width', this.width1)
-      .attr('height', this.py0)
-    this.clippedCommitsGroup = this.commitsGroup
+      .attr('x', d => d.clipPath.x)
+      .attr('y', d => d.clipPath.y)
+      .attr('width', d => d.clipPath.width)
+      .attr('height', d => d.clipPath.height)
+    groups
       .append('g')
-      .attr('clip-path', 'url(#commits-clip)')
-  }
-
-  _makeFilesGroup() {
-    // Files : Y-Axis
-    this.filesGroup = this.svg
-      .append('g')
-      .attr('id', 'files-group')
-      .attr('transform', `translate(${this.px0},${this.py0})`)
-    this.filesGroup
-      .append('defs')
-      .append('SVG:clipPath')
-      .attr('id', 'files-clip')
-      .append('rect')
-      .attr('x', -this.px0)
-      .attr('y', 0)
-      .attr('width', this.px0)
-      .attr('height', this.height1)
-    this.clippedFilesGroup = this.filesGroup
-      .append('g')
-      .attr('clip-path', 'url(#files-clip)')
-  }
-
-  _makeStatsGroup() {
-    // Stats : contents
-    this.statsGroup = this.svg
-      .append('g')
-      .attr('id', 'stats-group')
-      .attr('transform', `translate(${this.px0},${this.py0})`)
-    this.statsGroup
-      .append('defs')
-      .append('SVG:clipPath')
-      .attr('id', 'stats-clip')
-      .append('rect')
-      .attr('width', this.width1)
-      .attr('height', this.height1)
-    this.clippedStatsGroup = this.statsGroup
-      .append('g')
-      .attr('clip-path', 'url(#stats-clip)')
+      .attr('clip-path', d => `url(#${d.keyword}-clip)`)
   }
 
   _makeSVGCanvas() {
@@ -75,36 +58,42 @@ export default class GHFileGrass {
       .attr('id', 'gh-file-grass-canvas')
       .attr('width', this.width0)
       .attr('height', this.height0)
-    this._makeCommitsGroup()
-    this._makeFilesGroup()
-    this._makeStatsGroup()
+    this._makeGroups()
+  }
+
+  _selectGroup(keyword) {
+    return this.svg.select(`g#${keyword}-group`)
+  }
+
+  _selectClippedGroup(keyword) {
+    return this._selectGroup(keyword).select('g')
   }
 
   _addDragToGroups() {
-    this.statsGroup
+    const dragged = () => {
+      this._selectClippedGroup('commits').selectAll('text')
+        .attr('x', d => d.px += event.dx)
+        .attr('transform', d => `rotate(-60,${d.px},${d.py})`)
+      this._selectClippedGroup('files').selectAll('text')
+        .attr('y', d => d.py += event.dy)
+      this._selectClippedGroup('stats').selectAll('rect')
+        .attr('x', d => d.px += event.dx)
+        .attr('y', d => d.py += event.dy)
+    }
+
+    this._selectGroup('stats')
       .append('rect')
       .attr('id', 'pointer-event-handler')
       .attr('width', this.width1)
       .attr('height', this.height1)
       .style('fill', 'none')
       .style('pointer-events', 'all')
-      .call(drag()
-        .on('drag', () => {
-          this.clippedCommitsGroup.selectAll('text')
-            .attr('x', d => d.px += event.dx)
-            .attr('transform', d => `rotate(-60,${d.px},${d.py})`)
-          this.clippedFilesGroup.selectAll('text')
-            .attr('y', d => d.py += event.dy)
-          this.clippedStatsGroup.selectAll('rect')
-            .attr('x', d => d.px += event.dx)
-            .attr('y', d => d.py += event.dy)
-        })
-      )
+      .call(drag().on('drag', dragged))
   }
 
   _makeFileLabels() {
-    this.clippedFilesGroup
-      .selectAll('text.gh-file-label')
+    this._selectClippedGroup('files')
+      .selectAll('text.file-label')
       .data(this.files)
       .enter()
       .append('text')
@@ -117,8 +106,8 @@ export default class GHFileGrass {
   }
 
   _makeCommitLabels() {
-    this.clippedCommitsGroup
-      .selectAll('text.gh-commit-label')
+    this._selectClippedGroup('commits')
+      .selectAll('text.commit-label')
       .data(this.commits)
       .enter()
       .append('text')
@@ -145,7 +134,7 @@ export default class GHFileGrass {
         {length: endIndex - startIndex + 1},
         (_, i) => ({ index: i + startIndex })
       )
-      this.clippedStatsGroup
+      this._selectClippedGroup('stats')
         .selectAll(`rect.file-${file.index}`)
         .data(range)
         .enter()
@@ -159,12 +148,12 @@ export default class GHFileGrass {
   }
 
   _makeStatsRect() {
-    this.clippedStatsGroup
-      .selectAll('rect.gh-stats')
+    this._selectClippedGroup('stats')
+      .selectAll('rect.stats')
       .data(this.stats)
       .enter()
       .append('rect')
-      .attr('class', 'gh-stats')
+      .attr('class', 'stats')
       .attr('x', d => this._rectX(d))
       .attr('y', d => this._rectY(d))
       .attr('width', this.lc)
