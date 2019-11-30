@@ -13,11 +13,12 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       this._selectClippedGroup('stats').selectAll('rect')
         .attr('x', d => d.px += event.dx)
         .attr('y', d => d.py += event.dy)
-      this._selectClippedGroup('stats').selectAll('line')
-        .attr('x1', d => d.x1 += event.dx)
-        .attr('y1', d => d.y1 += event.dy)
-        .attr('x2', d => d.x2 += event.dx)
-        .attr('y2', d => d.y2 += event.dy)
+      this._selectClippedGroup('stats').selectAll('path')
+        .attr('d', d => {
+          d.source[0] += event.dx; d.source[1] += event.dy
+          d.target[0] += event.dx; d.target[1] += event.dy
+          return this.statsLink(d)
+      })
     }
 
     this._selectGroup('stats')

@@ -13,6 +13,8 @@ rect.file-life {
     fill: lightgrey;
 }
 
-line {
+path {
     stroke: lightseagreen;
+    stroke-opacity: 0.5;
+    fill: none;
 }

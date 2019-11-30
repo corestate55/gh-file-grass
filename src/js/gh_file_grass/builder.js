@@ -1,3 +1,4 @@
+import { linkHorizontal } from 'd3-shape'
 import GHFileGrassBase from './base'
 
 export default class GHFileGrassBuilder extends GHFileGrassBase {
@@ -144,18 +145,16 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
         continue
       }
       arrows.push({
-        x1: stat.px + dxy, y1: stat.py + dxy,
-        x2: dstStat.px + dxy, y2: dstStat.py + dxy
+        source: [stat.px + dxy, stat.py + dxy],
+        target: [dstStat.px + dxy, dstStat.py + dxy]
       })
     }
+    this.statsLink = linkHorizontal()
     this._selectClippedGroup('stats')
       .selectAll('line')
       .data(arrows)
       .enter()
-      .append('line')
-      .attr('x1', d => d.x1)
-      .attr('y1', d => d.y1)
-      .attr('x2', d => d.x2)
-      .attr('y2', d => d.y2)
+      .append('path')
+      .attr('d', d => this.statsLink(d))
   }
 }
