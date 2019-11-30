@@ -79,6 +79,11 @@ export default class GHFileGrass {
       this._selectClippedGroup('stats').selectAll('rect')
         .attr('x', d => d.px += event.dx)
         .attr('y', d => d.py += event.dy)
+      this._selectClippedGroup('stats').selectAll('line')
+        .attr('x1', d => d.x1 += event.dx)
+        .attr('y1', d => d.y1 += event.dy)
+        .attr('x2', d => d.x2 += event.dx)
+        .attr('y2', d => d.y2 += event.dy)
     }
 
     this._selectGroup('stats')
@@ -120,16 +125,58 @@ export default class GHFileGrass {
       .text(d => d.sha_short)
   }
 
-  _findStatsBy(file, type) {
+  _findStatsByFile(file) {
+    return this.stats.filter(d => d.path === file)
+  }
+
+  _findStatByFileAndType(file, type) {
     return this.stats.find(d => d.path === file && d.type === type)
+  }
+
+  _isRenamedStat(stat) {
+    return stat.stat_path.src !== stat.stat_path.dst
+  }
+
+  _findStatByFileAndRenamed(file) {
+    return this.stats.find(d => d.path === file && this._isRenamedStat(d))
+  }
+
+  _lifeStartIndex(file) {
+    const stat1 = this._findStatByFileAndType(file.name, 'new')
+    if (stat1) {
+      return this._indexOfCommit(stat1.sha_short)
+    }
+    const stat2 = this._findStatByFileAndRenamed(file.name)
+    if (stat2) {
+      return this._indexOfCommit(stat2.sha_short)
+    }
+    return 1
+  }
+
+  _isDstStatRenamed(stat) {
+    const dstStat = this._findDstStat(stat)
+    if (dstStat) {
+      return this._isRenamedStat(dstStat)
+    }
+    return false
+  }
+
+  _lifeEndIndex(file) {
+    const stat1 = this._findStatByFileAndType(file.name, 'deleted')
+    if (stat1) {
+      return this._indexOfCommit(stat1.sha_short)
+    }
+    const stat2 = this._findStatsByFile(file.name).find(d => this._isDstStatRenamed(d))
+    if (stat2) {
+      return this._indexOfCommit(stat2.sha_short)
+    }
+    return this.commits.length
   }
 
   _makeFileLifeStatsRect() {
     for (const file of this.files) {
-      const startStats = this._findStatsBy(file.name, 'new')
-      const startIndex = startStats ? this._indexOfCommit(startStats.sha_short) : 1
-      const endStats = this._findStatsBy(file.name, 'deleted')
-      const endIndex = endStats ? this._indexOfCommit(endStats.sha_short) : this.commits.length
+      const startIndex = this._lifeStartIndex(file)
+      const endIndex = this._lifeEndIndex(file)
       const range = Array.from(
         {length: endIndex - startIndex + 1},
         (_, i) => ({ index: i + startIndex })
@@ -196,6 +243,38 @@ export default class GHFileGrass {
     return Math.max(...fileLengthList)
   }
 
+
+  _findDstStat(stat) {
+    if (stat.dst === '0000000' || stat.dst === '') {
+      return undefined
+    }
+    return this.stats.find(d => d.src === stat.dst)
+  }
+
+  _makeStatsArrow() {
+    const arrows = []
+    const dxy = this.lc / 2
+    for (const stat of this.stats) {
+      const dstStat = this._findDstStat(stat)
+      if (!dstStat) {
+        continue
+      }
+      arrows.push({
+        x1: stat.px + dxy, y1: stat.py + dxy,
+        x2: dstStat.px + dxy, y2: dstStat.py + dxy
+      })
+    }
+    this._selectClippedGroup('stats')
+      .selectAll('line')
+      .data(arrows)
+      .enter()
+      .append('line')
+      .attr('x1', d => d.x1)
+      .attr('y1', d => d.y1)
+      .attr('x2', d => d.x2)
+      .attr('y2', d => d.y2)
+  }
+
   async draw() {
     const data = await json(this.logUri)
     this.files = data.files
@@ -213,6 +292,7 @@ export default class GHFileGrass {
     this._makeCommitLabels()
     this._makeFileLifeStatsRect()
     this._makeStatsRect()
+    this._makeStatsArrow()
     this._addDragToGroups()
   }
 }

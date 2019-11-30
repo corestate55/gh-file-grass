@@ -12,3 +12,7 @@ text.commit-label {
 rect.file-life {
     fill: lightgrey;
 }
+
+line {
+    stroke: lightseagreen;
+}
