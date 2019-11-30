@@ -3,6 +3,7 @@
 require 'git'
 require 'json'
 require 'optparse'
+require_relative './git_show_parser'
 
 # property of a file in a log entry
 class GitLogEntryFile
@@ -69,7 +70,7 @@ class GitLogEntry
       parsed_diff_stat_path = parse_moved_file(diff_stat_path)
       GitLogEntryFile.new(diff_file, diff_stat, parsed_diff_stat_path)
     end
-    debug_print
+    # debug_print
   end
 
   # rubocop:disable Metrics/MethodLength
@@ -137,6 +138,15 @@ class GitLog
   end
 
   def to_data
+    data = to_data_without_init_commit
+    # append initial commit data if necessary
+    init_log = @git.log(@count).find { |log| log.parent.nil? }
+    init_log ? merge_data(data, init_log) : data
+  end
+
+  private
+
+  def to_data_without_init_commit
     {
       repo: @git.repo,
       branch: @git.branch.full,
@@ -146,11 +156,30 @@ class GitLog
     }
   end
 
-  private
+  def merge_data(data, init_log)
+    log_parser = GitShowParser.new(init_log.sha)
+    merger = log_parser.to_data
+
+    data[:commits].concat(merger[:commits]) # append at last
+    data[:commits].each_with_index { |c, i| c[:index] = i + 1 }
+
+    data[:stats].concat(merger[:stats]) # append at last
+
+    merger[:files].each do |tf|
+      f2merge = data[:files].find { |f| f[:name] == tf[:name] }
+      if f2merge
+        f2merge[:commits].concat(tf[:commits]) # append at last
+      else
+        data[:files].unshift(tf)
+      end
+    end
+    data[:files].each_with_index { |f, i| f[:index] = i + 1 }
+    data
+  end
 
   def make_commits
     # logs(count = nil) gets all logs
-    # TODO: first commit:
+    # NOTICE: first commit:
     #   ignore first commit (it doesn't have parent)
     #   because `diff_parent` for the log returns "diff initial-commit current"...
     commits = @git.log(@count)
