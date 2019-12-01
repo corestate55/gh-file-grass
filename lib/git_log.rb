@@ -33,35 +33,48 @@ class GitLog
     }
   end
 
-  def merge_data(data, init_log)
-    log_parser = GitShowParser.new(init_log.sha)
-    merger = log_parser.to_data
-
+  def merge_commits_data(data, merger)
     data[:commits].concat(merger[:commits]) # append at last
-    data[:commits].each_with_index { |c, i| c[:index] = data[:commits].length - i }
+    data[:commits].each_with_index do |c, i|
+      c[:index] = data[:commits].length - i
+    end
+  end
 
+  def merge_stats_data(data, merger)
     data[:stats].concat(merger[:stats]) # append at last
+  end
 
+  def merge_files_data(data, merger)
     merger[:files].each do |tf|
       f2merge = data[:files].find { |f| f[:name] == tf[:name] }
       if f2merge
         f2merge[:commits].concat(tf[:commits]) # append at last
       else
-        data[:files].unshift(tf)
+        data[:files].push(tf)
       end
     end
-    data[:files].each_with_index { |f, i| f[:index] = i + 1 }
+    data[:files]
+      .sort { |a, b| a[:name] <=> b[:name] }
+      .each_with_index { |f, i| f[:index] = i + 1 }
+  end
+
+  def merge_data(data, init_log)
+    log_parser = GitShowParser.new(init_log.sha)
+    merger = log_parser.to_data
+    merge_commits_data(data, merger)
+    merge_stats_data(data, merger)
+    merge_files_data(data, merger)
     data
   end
 
   def make_commits
     # logs(count = nil) gets all logs
     # NOTICE: first commit:
-    #   ignore first commit (it doesn't have parent)
-    #   because `diff_parent` for the log returns "diff initial-commit current"...
+    #   ignore first commit (it doesn't have parent), because
+    #   `diff_parent` for the log returns "diff initial-commit current".
     commits = @git.log(@count)
-                .select { |log| !log.parent.nil? }
-                .map { |log| GitLogEntry.new(log).to_data }
+                  .reject { |log| log.parent.nil? }
+                  .map { |log| GitLogEntry.new(log).to_data }
     commits.each_with_index { |commit, i| commit[:index] = commits.length - i }
     commits
   end
@@ -76,7 +89,7 @@ class GitLog
     stats.flatten
   end
 
-  def make_file_table
+  def make_file_table_from_stats
     file_table = {}
     @stats.each do |stat|
       if file_table[stat[:path]]
@@ -85,6 +98,11 @@ class GitLog
         file_table[stat[:path]] = [stat[:sha_short]]
       end
     end
+    file_table
+  end
+
+  def make_file_table
+    file_table = make_file_table_from_stats
     file_table.keys.sort.map.with_index do |file, index|
       {
         name: file,

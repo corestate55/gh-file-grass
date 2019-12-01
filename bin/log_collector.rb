@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'json'
 require 'optparse'
 require_relative '../lib/git_log'

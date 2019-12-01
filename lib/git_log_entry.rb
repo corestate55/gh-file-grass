@@ -1,54 +1,6 @@
 # frozen_string_literal: true
 
-# property of a file in a log entry
-class GitLogEntryFile
-  def initialize(diff_file, diff_stat, diff_stat_path)
-    @file = diff_file
-    @stat = diff_stat
-    @stat_path = diff_stat_path
-    throw Error unless @stat
-  end
-
-  # rubocop:disable Metrics/MethodLength
-  def to_data
-    {
-      path: @file.path,
-      mode: @file.mode,
-      type: invert_type,
-      src: @file.dst, # invert src/dst
-      dst: @file.src,
-      stat_path: @stat_path,
-      insertions: @stat[:deletions], # invert insertions/deletions
-      deletions: @stat[:insertions],
-      lines: @stat[:insertions] + @stat[:deletions]
-    }
-  end
-  # rubocop:enable Metrics/MethodLength
-
-  def insertions
-    @stat[:deletions]
-  end
-
-  def deletions
-    @stat[:insertions]
-  end
-
-  def path
-    @file.path
-  end
-
-  def type
-    invert_type
-  end
-
-  private
-
-  def invert_type
-    type = @file.type
-    return type if type == 'modified'
-    type == 'new' ? 'deleted' : 'new'
-  end
-end
+require_relative './git_log_entry_file'
 
 # a log entry
 class GitLogEntry
@@ -92,9 +44,10 @@ class GitLogEntry
 
   def debug_print
     warn "commit: #{@log.sha}"
-    warn "- parents: #{@log.parents.map { |c| c.sha }}"
+    warn "- parents: #{@log.parents.map(&:sha)}"
     @diff_files.each do |file|
-      warn "- file: #{file.path} | #{file.type} (+#{file.insertions},-#{file.deletions})"
+      warn "- file: #{file.path} | #{file.type}" \
+           " (+#{file.insertions},-#{file.deletions})"
     end
   end
 
@@ -102,28 +55,26 @@ class GitLogEntry
     { path: path, src: src, dst: dst }
   end
 
+  def make_inverted_stats_path(path, changed, src, dst)
+    # invert src/dst
+    inverted_path = path.sub(changed, "{#{dst} => #{src}}")
+    make_stats_path(inverted_path, dst, src)
+  end
+
+  def params_from(stats_path, changed, be_src, be_dst)
+    src = stats_path.sub(changed, be_src || '')
+    dst = stats_path.sub(changed, be_dst || '')
+    [stats_path, changed, src, dst]
+  end
+
   def parse_moved_file(stats_path)
-    if stats_path =~ /({(.+)? => (.+)?})/
-      changed = Regexp.last_match(1)
-      be_src = Regexp.last_match(2)
-      be_dst = Regexp.last_match(3)
-      src = stats_path.sub(changed, be_src || '')
-      dst = stats_path.sub(changed, be_dst || '')
-      inverted_stats_path = stats_path.sub(changed, "{#{dst} => #{src}}")
-      # warn "#{stats_path}"
-      # warn "  - changed: #{changed}, #{be_src}, #{be_dst}"
-      # warn "  - src: #{src}"
-      # warn "  - dst: #{dst}"
-      # warn "  - inverted_stats_path: #{inverted_stats_path}"
-      make_stats_path(inverted_stats_path, dst, src) # invert src/dst
-      # make_stats_path(stats_path, src, dst)
-    elsif stats_path =~ /((.+) => (.+))/
-      changed = Regexp.last_match(1)
-      src = Regexp.last_match(2)
-      dst = Regexp.last_match(3)
-      inverted_stats_path = stats_path.sub(changed, "{#{dst} => #{src}}")
-      make_stats_path(inverted_stats_path, dst, src) # invert src/dst
-      # make_stats_path(stats_path, src, dst)
+    case stats_path
+    when /({(.+)? => (.+)?})/
+      md = Regexp.last_match
+      make_inverted_stats_path(*params_from(stats_path, md[1], md[2], md[3]))
+    when /((.+) => (.+))/
+      md = Regexp.last_match
+      make_inverted_stats_path(stats_path, md[1], md[2], md[3])
     else
       make_stats_path(stats_path, stats_path, stats_path) # dummy
     end
