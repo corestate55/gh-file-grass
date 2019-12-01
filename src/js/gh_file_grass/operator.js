@@ -3,6 +3,46 @@ import { drag } from 'd3-drag'
 import GHFileGrassBuilder from "./builder"
 
 export default class GHFileGrassOperator extends GHFileGrassBuilder {
+  _selectObject(keyword, index, callback) {
+    const selection = this.svg.selectAll(`.${keyword}-${index}`)
+    callback(selection)
+  }
+
+  _selectFile(fileIndex, callback) {
+    this._selectObject('file', fileIndex, callback)
+  }
+
+  _selectCommit(commitIndex, callback) {
+    this._selectObject('commit', commitIndex, callback)
+  }
+
+  _addSelected(selection) {
+    selection.classed('selected', true)
+  }
+
+  _removeSelected(selection) {
+    selection.classed('selected', false)
+  }
+
+  _addFilesHandler() {
+    const mouseOver = d => this._selectFile(d.index, this._addSelected)
+    const mouseOut = d => this._selectFile(d.index, this._removeSelected)
+    this._selectClippedGroup('files').selectAll('text')
+      .on('mouseover', mouseOver)
+      .on('mouseout', mouseOut)
+    this._selectClippedGroup('files').selectAll('rect')
+      .on('mouseover', mouseOver)
+      .on('mouseout', mouseOut)
+  }
+
+  _addCommitsHandler() {
+    const mouseOver = d => this._selectCommit(d.index, this._addSelected)
+    const mouseOut = d => this._selectCommit(d.index, this._removeSelected)
+    this._selectClippedGroup('commits').selectAll('text')
+      .on('mouseover', mouseOver)
+      .on('mouseout', mouseOut)
+  }
+
   _addDragToGroups() {
     const dragged = () => {
       this._selectClippedGroup('commits').selectAll('text')

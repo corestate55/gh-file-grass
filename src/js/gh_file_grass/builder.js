@@ -94,12 +94,19 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
         {length: endIndex - startIndex + 1},
         (_, i) => ({ index: i + startIndex })
       )
+      const classBy = d => {
+        return [
+          'file-life',
+          'file-' + file.index,
+          'commit-' + d.index
+        ].join(' ')
+      }
       this._selectClippedGroup('stats')
         .selectAll(`rect.file-${file.index}`)
         .data(range)
         .enter()
         .append('rect')
-        .attr('class', `file-life file-${file.index}`)
+        .attr('class', classBy)
         .attr('x', d => this._px(d.index, d))
         .attr('y', d => this._py(file.index, d))
         .attr('width', this.lc)
@@ -108,12 +115,19 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
   }
 
   _makeStatsRect() {
+    const classBy = d => {
+      return [
+        'stats',
+        'file-' + this._indexOfFile(d.path),
+        'commit-' + this._indexOfCommit(d.sha_short)
+      ].join(' ')
+    }
     this._selectClippedGroup('stats')
       .selectAll('rect.stats')
       .data(this.stats)
       .enter()
       .append('rect')
-      .attr('class', 'stats')
+      .attr('class', classBy)
       .attr('x', d => this._rectX(d))
       .attr('y', d => this._rectY(d))
       .attr('width', this.lc)
@@ -172,9 +186,10 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       hist: d.commits.length
     }))
 
+    const basePosRatio = 0.7
     const xScale = scaleLinear()
       .domain([0, Math.max(...commitHist.map(d => d.hist))])
-      .range([this.px0, this.px0 * 0.2]) // 0.2: margin left
+      .range([0, (1 - basePosRatio) * this.px0])
 
     this._selectClippedGroup('files')
       .selectAll('rect.commit-hist')
@@ -182,9 +197,9 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .enter()
       .append('rect')
       .attr('class', d => `file-${d.index} commit-hist`)
-      .attr('x', d => xScale(d.hist))
+      .attr('x', this.px0 * basePosRatio)
       .attr('y', d => this._py(d.index, d))
-      .attr('width', this.px0)
+      .attr('width', d => xScale(d.hist))
       .attr('height', this.lc)
   }
 }

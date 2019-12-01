@@ -4,7 +4,7 @@
 
 <script>
 import GHFileGrass from '../js/gh_file_grass'
-import '../css/file_grass.css'
+import '../css/file_grass.scss'
 
 export default {
   data: () => ({

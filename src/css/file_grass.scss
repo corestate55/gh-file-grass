@@ -1,0 +1,47 @@
+text {
+  font-size: 10pt;
+
+  &.file-label {
+    text-anchor: start;
+    &.selected {
+      font-weight: bold;
+    }
+  }
+
+  &.commit-label {
+    text-anchor: start;
+    &.selected {
+      font-weight: bold;
+    }
+  }
+}
+
+rect {
+  &.stats {
+    fill: #186A3B;
+    &.selected {
+      fill: #2ECC71;
+    }
+  }
+  &.file-life {
+    fill: #CACFD2;
+    fill-opacity: 0.6;
+    &.selected {
+      fill-opacity: 1.0;
+    }
+  }
+
+  &.commit-hist {
+    fill: #ABEBC6;
+    fill-opacity: 0.6;
+    &.selected {
+      fill-opacity: 1.0;
+    }
+  }
+}
+path {
+  stroke: limegreen;
+  stroke-width: 2pt;
+  stroke-opacity: 0.5;
+  fill: none;
+}
