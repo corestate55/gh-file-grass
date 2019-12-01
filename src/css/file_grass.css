@@ -2,7 +2,7 @@ text {
     font-size: 10pt;
 }
 text.file-label {
-    text-anchor: end;
+    text-anchor: start;
 }
 
 text.commit-label {
@@ -11,6 +11,10 @@ text.commit-label {
 
 rect.file-life {
     fill: lightgrey;
+}
+
+rect.commit-hist {
+    fill: #B7DCB7;
 }
 
 path {

@@ -4,6 +4,7 @@ export default class GHFileGrass extends GHFileGrassOperator {
   async draw(logUrl) {
     await this._initialize(logUrl)
     this._makeSVGCanvas()
+    this._makeCommitHistogram()
     this._makeFileLabels()
     this._makeCommitLabels()
     this._makeFileLifeStatsRect()

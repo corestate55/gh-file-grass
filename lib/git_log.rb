@@ -54,7 +54,7 @@ class GitLog
       end
     end
     data[:files]
-      .sort { |a, b| a[:name] <=> b[:name] }
+      .sort! { |a, b| a[:name] <=> b[:name] }
       .each_with_index { |f, i| f[:index] = i + 1 }
   end
 

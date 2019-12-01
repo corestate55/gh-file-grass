@@ -1,4 +1,5 @@
 import { linkHorizontal } from 'd3-shape'
+import { scaleLinear } from 'd3-scale'
 import GHFileGrassBase from './base'
 
 export default class GHFileGrassBuilder extends GHFileGrassBase {
@@ -162,5 +163,28 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .enter()
       .append('path')
       .attr('d', d => this.statsLink(d))
+  }
+
+  _makeCommitHistogram() {
+    const commitHist = this.files.map(d => ({
+      index: d.index,
+      name: d.name, // for debug
+      hist: d.commits.length
+    }))
+
+    const xScale = scaleLinear()
+      .domain([0, Math.max(...commitHist.map(d => d.hist))])
+      .range([this.px0, this.px0 * 0.2]) // 0.2: margin left
+
+    this._selectClippedGroup('files')
+      .selectAll('rect.commit-hist')
+      .data(commitHist)
+      .enter()
+      .append('rect')
+      .attr('class', d => `file-${d.index} commit-hist`)
+      .attr('x', d => xScale(d.hist))
+      .attr('y', d => this._py(d.index, d))
+      .attr('width', this.px0)
+      .attr('height', this.lc)
   }
 }

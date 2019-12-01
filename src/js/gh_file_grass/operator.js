@@ -19,6 +19,8 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
           d.target[0] += event.dx; d.target[1] += event.dy
           return this.statsLink(d)
       })
+      this._selectClippedGroup('files').selectAll('rect')
+        .attr('y', d => d.py += event.dy)
     }
 
     this._selectGroup('stats')

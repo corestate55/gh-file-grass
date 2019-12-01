@@ -51,9 +51,9 @@ export default class GHFileGrassBase {
         }
       },
       {
-        keyword: 'files', px: this.px0, py: this.py0,
+        keyword: 'files', px: 0, py: this.py0,
         clipPath: {
-          x: -this.px0, y: 0, width: this.px0, height: this.height1
+          x: 0, y: 0, width: this.px0, height: this.height1
         }
       },
       {
