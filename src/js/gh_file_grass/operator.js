@@ -43,6 +43,20 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       .on('mouseout', mouseOut)
   }
 
+  _addStatsHandler() {
+    const mouseOver = d => {
+      this._selectCommit(d.commitIndex, this._addSelected)
+      this._selectFile(d.fileIndex, this._addSelected)
+    }
+    const mouseOut = d => {
+      this._selectCommit(d.commitIndex, this._removeSelected)
+      this._selectFile(d.fileIndex, this._removeSelected)
+    }
+    this._selectClippedGroup('stats').selectAll('rect')
+      .on('mouseover', mouseOver)
+      .on('mouseout', mouseOut)
+  }
+
   _addDragToGroups() {
     const dragged = () => {
       this._selectClippedGroup('commits').selectAll('text')
@@ -63,8 +77,10 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
         .attr('y', d => d.py += event.dy)
     }
 
+    // NOTICE: insert before 'g' (group of clipped-stats)
+    // to enable stats-rect event handling.
     this._selectGroup('stats')
-      .append('rect')
+      .insert('rect', 'g')
       .attr('id', 'pointer-event-handler')
       .attr('width', this.width1)
       .attr('height', this.height1)

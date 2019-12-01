@@ -1,9 +1,11 @@
 text {
   font-size: 10pt;
+  transition: fill .1s ease-in-out, font-weight .1s ease-in-out;
 
   &.file-label {
     text-anchor: start;
     &.selected {
+      fill: #2ECC71;
       font-weight: bold;
     }
   }
@@ -11,12 +13,15 @@ text {
   &.commit-label {
     text-anchor: start;
     &.selected {
+      fill: #2ECC71;
       font-weight: bold;
     }
   }
 }
 
 rect {
+  transition: fill .1s ease-in-out, fill-opacity .1s ease-in-out;
+
   &.stats {
     fill: #186A3B;
     &.selected {
@@ -39,6 +44,7 @@ rect {
     }
   }
 }
+
 path {
   stroke: limegreen;
   stroke-width: 2pt;
