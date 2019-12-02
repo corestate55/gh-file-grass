@@ -116,7 +116,25 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
     }
   }
 
+  _classifyStatsByModifiedLines() {
+    const stepDiv = this.stats.length / 5
+    let count = 1
+    let step = stepDiv
+    this.stats
+      .sort((a, b) => a.lines - b.lines)
+      .forEach((d, i) => {
+        if (i > step) {
+          count++
+          step = stepDiv * count
+        }
+        d.modifiedClass = count
+      })
+    this.stats.sort((a, b) => a.index - b.index)
+  }
+
   _makeStatsRect() {
+    this._classifyStatsByModifiedLines()
+
     const classBy = d => {
       d.fileIndex = this._indexOfFile(d.path)
       d.commitIndex = this._indexOfCommit(d.sha_short)
@@ -124,9 +142,11 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
         'stats',
         `stat-${d.index}`,
         `file-${d.fileIndex}`,
-        `commit-${d.commitIndex}`
+        `commit-${d.commitIndex}`,
+        `mod-${d.modifiedClass}`
       ].join(' ')
     }
+
     this._selectClippedGroup('stats')
       .selectAll('rect.stats')
       .data(this.stats)
@@ -178,7 +198,9 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       })
     }
     const classBy = d => [
-      'stat-arrow', `stat-${d.sourceIndex}`, `stat-${d.targetIndex}`
+      'stat-arrow',
+      `stat-${d.sourceIndex}`,
+      `stat-${d.targetIndex}`
     ].join(' ')
 
     this.statsLink = linkHorizontal() // link generator
@@ -186,7 +208,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .selectAll('path.stat-arrow')
       .data(arrows)
       .enter()
-      .append('path')
+      .insert('path', 'rect.stats') // paths be under stats-rect
       .attr('class', classBy)
       .attr('d', d => this.statsLink(d))
   }

@@ -1,3 +1,12 @@
+$base-color: #53c653;
+$strong-stroke-color: #ff80b3;
+
+%selected-label {
+  fill: $base-color;
+  stroke: none;
+  font-weight: bold;
+}
+
 text {
   font-size: 10pt;
   transition: fill .1s ease-in-out, font-weight .1s ease-in-out;
@@ -5,55 +14,68 @@ text {
   &.file-label {
     text-anchor: start;
     &.selected {
-      fill: #2ECC71;
-      font-weight: bold;
+      @extend %selected-label;
     }
   }
 
   &.commit-label {
     text-anchor: start;
     &.selected {
-      fill: #2ECC71;
-      font-weight: bold;
+      @extend %selected-label;
     }
+  }
+}
+
+%rect-base {
+  transition: fill .1s ease-in-out, fill-opacity .1s ease-in-out;
+  fill-opacity: 0.6;
+  &.selected {
+    fill-opacity: 1.0;
   }
 }
 
 rect {
-  transition: fill .1s ease-in-out, fill-opacity .1s ease-in-out;
-
   &.stats {
-    fill: #186A3B;
+    &.mod-1 {
+      fill: #c6ecc6;
+    }
+    &.mod-2 {
+      fill: #8cd98c;
+    }
+    &.mod-3 {
+      fill: #53c653;
+    }
+    &.mod-4 {
+      fill: #339933;
+    }
+    &.mod-5 {
+      fill: #206020;
+    }
     &.selected {
-      fill: #2ECC71;
+      stroke-width: 1pt;
+      stroke: $strong-stroke-color;
     }
   }
+
   &.file-life {
+    @extend %rect-base;
     fill: #CACFD2;
-    fill-opacity: 0.6;
-    &.selected {
-      fill-opacity: 1.0;
-    }
   }
 
   &.commit-hist {
-    fill: #ABEBC6;
-    fill-opacity: 0.6;
-    &.selected {
-      fill-opacity: 1.0;
-    }
+    @extend %rect-base;
+    fill: $base-color;
   }
 }
 
 path.stat-arrow {
-  transition: stroke .1s ease-in-out, stroke-opacity .1s ease-in-out;
+  transition: stroke .1s ease-in-out;
 
-  stroke: limegreen;
+  stroke: $base-color;
   stroke-width: 2pt;
   stroke-opacity: 0.5;
   fill: none;
   &.selected {
-    stroke-width: 4pt;
-    stroke-opacity: 0.8;
+    stroke: $strong-stroke-color;
   }
 }
