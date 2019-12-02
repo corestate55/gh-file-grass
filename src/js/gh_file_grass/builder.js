@@ -97,13 +97,12 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
           commitIndex: i + startIndex
         })
       )
-      const classBy = d => {
-        return [
-          'file-life',
-          'file-' + d.fileIndex,
-          'commit-' + d.commitIndex
-        ].join(' ')
-      }
+      const classBy = d => [
+        'file-life',
+        `file-${d.fileIndex}`,
+        `commit-${d.commitIndex}`
+      ].join(' ')
+
       this._selectClippedGroup('stats')
         .selectAll(`rect.file-${file.index}`)
         .data(range)
@@ -123,8 +122,9 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       d.commitIndex = this._indexOfCommit(d.sha_short)
       return [
         'stats',
-        'file-' + d.fileIndex,
-        'commit-' + d.commitIndex
+        `stat-${d.index}`,
+        `file-${d.fileIndex}`,
+        `commit-${d.commitIndex}`
       ].join(' ')
     }
     this._selectClippedGroup('stats')
@@ -171,16 +171,23 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
         continue
       }
       arrows.push({
+        sourceIndex: stat.index,
+        targetIndex: dstStat.index,
         source: [stat.px + dxy, stat.py + dxy],
         target: [dstStat.px + dxy, dstStat.py + dxy]
       })
     }
-    this.statsLink = linkHorizontal()
+    const classBy = d => [
+      'stat-arrow', `stat-${d.sourceIndex}`, `stat-${d.targetIndex}`
+    ].join(' ')
+
+    this.statsLink = linkHorizontal() // link generator
     this._selectClippedGroup('stats')
-      .selectAll('line')
+      .selectAll('path.stat-arrow')
       .data(arrows)
       .enter()
       .append('path')
+      .attr('class', classBy)
       .attr('d', d => this.statsLink(d))
   }
 

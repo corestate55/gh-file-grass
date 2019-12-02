@@ -45,9 +45,15 @@ rect {
   }
 }
 
-path {
+path.stat-arrow {
+  transition: stroke .1s ease-in-out, stroke-opacity .1s ease-in-out;
+
   stroke: limegreen;
   stroke-width: 2pt;
   stroke-opacity: 0.5;
   fill: none;
+  &.selected {
+    stroke-width: 4pt;
+    stroke-opacity: 0.8;
+  }
 }

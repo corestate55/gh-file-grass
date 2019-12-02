@@ -34,21 +34,22 @@ class GitLog
   end
 
   def merge_commits_data(data, merger)
-    data[:commits].concat(merger[:commits]) # append at last
+    data[:commits].concat(merger[:commits])
     data[:commits].each_with_index do |c, i|
       c[:index] = data[:commits].length - i
     end
   end
 
   def merge_stats_data(data, merger)
-    data[:stats].concat(merger[:stats]) # append at last
+    data[:stats].concat(merger[:stats])
+    data[:stats].each_with_index { |s, i| s[:index] = i + 1 }
   end
 
   def merge_files_data(data, merger)
     merger[:files].each do |tf|
       f2merge = data[:files].find { |f| f[:name] == tf[:name] }
       if f2merge
-        f2merge[:commits].concat(tf[:commits]) # append at last
+        f2merge[:commits].concat(tf[:commits])
       else
         data[:files].push(tf)
       end
@@ -62,8 +63,8 @@ class GitLog
     log_parser = GitShowParser.new(init_log.sha)
     merger = log_parser.to_data
     merge_commits_data(data, merger)
-    merge_stats_data(data, merger)
     merge_files_data(data, merger)
+    merge_stats_data(data, merger)
     data
   end
 
@@ -81,8 +82,9 @@ class GitLog
 
   def make_stats
     stats = @commits.map do |commit|
-      commit[:stat][:files].map do |stat_file|
+      commit[:stat][:files].map.with_index do |stat_file, i|
         stat_file[:sha_short] = commit[:sha_short]
+        stat_file[:index] = i + 1
         stat_file
       end
     end

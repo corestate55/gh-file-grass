@@ -16,6 +16,10 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
     this._selectObject('commit', commitIndex, callback)
   }
 
+  _selectStat(statIndex, callback) {
+    this._selectObject('stat', statIndex, callback)
+  }
+
   _addSelected(selection) {
     selection.classed('selected', true)
   }
@@ -47,12 +51,34 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
     const mouseOver = d => {
       this._selectCommit(d.commitIndex, this._addSelected)
       this._selectFile(d.fileIndex, this._addSelected)
+      if (d.index) {
+        this._selectStat(d.index, this._addSelected)
+      }
     }
     const mouseOut = d => {
       this._selectCommit(d.commitIndex, this._removeSelected)
       this._selectFile(d.fileIndex, this._removeSelected)
+      if (d.index) {
+        this._selectStat(d.index, this._removeSelected)
+      }
     }
     this._selectClippedGroup('stats').selectAll('rect')
+      .on('mouseover', mouseOver)
+      .on('mouseout', mouseOut)
+  }
+
+  _addStatsArrowHandler() {
+    const mouseOver = d => {
+      [d.sourceIndex, d.targetIndex].forEach(statIndex => {
+        this._selectStat(statIndex, this._addSelected)
+      })
+    }
+    const mouseOut = d => {
+      [d.sourceIndex, d.targetIndex].forEach(statIndex => {
+        this._selectStat(statIndex, this._removeSelected)
+      })
+    }
+    this._selectClippedGroup('stats').selectAll('path')
       .on('mouseover', mouseOver)
       .on('mouseout', mouseOut)
   }
