@@ -117,7 +117,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
   }
 
   _classifyStatsByModifiedLines() {
-    const stepDiv = this.stats.length / 5
+    const stepDiv = this.stats.length / 4
     let count = 1
     let step = stepDiv
     this.stats

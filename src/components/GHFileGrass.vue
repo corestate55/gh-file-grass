@@ -1,5 +1,8 @@
 <template>
-  <div id="gh-file-grass"></div>
+  <div>
+    <div id="gh-file-grass"></div>
+    <div id="stat-tooltip" style="visibility: hidden"></div>
+  </div>
 </template>
 
 <script>
