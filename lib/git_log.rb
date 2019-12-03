@@ -82,13 +82,12 @@ class GitLog
 
   def make_stats
     stats = @commits.map do |commit|
-      commit[:stat][:files].map.with_index do |stat_file, i|
+      commit[:stat][:files].map do |stat_file|
         stat_file[:sha_short] = commit[:sha_short]
-        stat_file[:index] = i + 1
         stat_file
       end
     end
-    stats.flatten
+    stats.flatten.each_with_index { |stat, i| stat[:index] = i + 1 }
   end
 
   def make_file_table_from_stats
