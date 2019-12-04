@@ -34,9 +34,6 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
     this._selectClippedGroup('files').selectAll('text')
       .on('mouseover', mouseOver)
       .on('mouseout', mouseOut)
-    this._selectClippedGroup('files').selectAll('rect')
-      .on('mouseover', mouseOver)
-      .on('mouseout', mouseOut)
   }
 
   _commitTooltipHtml(commit) {
@@ -86,7 +83,7 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
 
   _statTooltipHtml(stat) {
     const sp = stat.stat_path // alias
-    const movedPath = sp.src !== sp.dst ? this._liStr('Moved', sp.path) : ''
+    const movedPath = sp.src !== sp.dst ? this._liStr('Renamed', sp.path) : ''
     const modifiedIndicator = `
       <li><span class="ins">+${stat.insertions}</span>,
           <span class="del">-${stat.deletions}</span>
@@ -95,8 +92,10 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
 
     return [
       '<ul>',
-      this._liStr('File', stat.path),
       this._liStr('Commit', stat.sha_short),
+      this._liStr('File', stat.path),
+      this._liStr('Type', stat.type),
+      this._liStr('Index', `${stat.src}..${stat.dst} ${stat.mode}`),
       movedPath,
       modifiedIndicator,
       '</ul>'
@@ -157,10 +156,14 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
     this._selectClippedGroup('files')
       .selectAll('rect.commit-hist')
       .on('mouseover', d => {
+        this._selectFile(d.index, this._addSelected)
         const htmlStr = `${d.hist} ${d.hist > 1 ? 'commits' : 'commit'}`
         this._enableTooltip(htmlStr)
       })
-      .on('mouseout', () => this._disableTooltip())
+      .on('mouseout', d => {
+        this._selectFile(d.index, this._removeSelected)
+        this._disableTooltip()
+      })
   }
 
   _addDragToGroups() {

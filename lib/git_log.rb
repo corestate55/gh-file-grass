@@ -26,7 +26,8 @@ class GitLog
   def to_data_without_init_commit
     {
       repo: @git.repo,
-      branch: @git.branch.full,
+      branch: @git.branches.local.find(&:current),
+      origin: @git.config['remote.origin.url'].gsub(/\.git$/, ''),
       commits: reconstruct_commits,
       stats: @stats,
       files: @file_table
@@ -45,6 +46,7 @@ class GitLog
     data[:stats].each_with_index { |s, i| s[:index] = i + 1 }
   end
 
+  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
   def merge_files_data(data, merger)
     merger[:files].each do |tf|
       f2merge = data[:files].find { |f| f[:name] == tf[:name] }
@@ -58,9 +60,10 @@ class GitLog
       .sort! { |a, b| a[:name] <=> b[:name] }
       .each_with_index { |f, i| f[:index] = i + 1 }
   end
+  # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
   def merge_data(data, init_log)
-    log_parser = GitShowParser.new(init_log.sha)
+    log_parser = GitShowParser.new(@git.show(init_log.sha))
     merger = log_parser.to_data
     merge_commits_data(data, merger)
     merge_files_data(data, merger)

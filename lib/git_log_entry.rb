@@ -51,14 +51,15 @@ class GitLogEntry
     end
   end
 
-  def make_stats_path(path, src, dst)
+  def make_stats_path(path, _changed, src, dst)
     { path: path, src: src, dst: dst }
   end
 
   def make_inverted_stats_path(path, changed, src, dst)
     # invert src/dst
-    inverted_path = path.sub(changed, "{#{dst} => #{src}}")
-    make_stats_path(inverted_path, dst, src)
+    inverted_changed = "{#{dst} => #{src}}"
+    inverted_path = path.sub(changed, inverted_changed)
+    [inverted_path, inverted_changed, dst, src]
   end
 
   def params_from(stats_path, changed, be_src, be_dst)
@@ -67,18 +68,22 @@ class GitLogEntry
     [stats_path, changed, src, dst]
   end
 
+  # rubocop:disable Metrics/MethodLength
   def parse_moved_file(stats_path)
     case stats_path
     when /({(.+)? => (.+)?})/
       md = Regexp.last_match
-      make_inverted_stats_path(*params_from(stats_path, md[1], md[2], md[3]))
+      inv_paths = make_inverted_stats_path(stats_path, md[1], md[2], md[3])
+      make_stats_path(*params_from(*inv_paths))
     when /((.+) => (.+))/
       md = Regexp.last_match
-      make_inverted_stats_path(stats_path, md[1], md[2], md[3])
+      inv_paths = make_inverted_stats_path(stats_path, md[1], md[2], md[3])
+      make_stats_path(*inv_paths)
     else
-      make_stats_path(stats_path, stats_path, stats_path) # dummy
+      make_stats_path(stats_path, '', stats_path, stats_path) # dummy
     end
   end
+  # rubocop:enable Metrics/MethodLength
 
   def find_diff_stat(path)
     @diff_stat_files.each_key.find do |k|

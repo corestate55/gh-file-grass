@@ -31,6 +31,8 @@ export default class GHFileGrassBase {
 
   async _initialize(logUri) {
     const data = await json(logUri)
+    this.branch = data.branch
+    this.origin = data.origin
     this.files = data.files
     this.commits = data.commits.reverse()
     this.stats = data.stats

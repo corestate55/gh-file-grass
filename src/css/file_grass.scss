@@ -89,6 +89,7 @@ div#stat-tooltip {
   height: auto;
   width: auto;
   min-height: 24pt;
+  pointer-events: none;
 
   &:after {
     border: 12px solid transparent;

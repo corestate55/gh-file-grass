@@ -5,8 +5,8 @@ require 'json'
 # rubocop:disable Metrics/ClassLength
 # parse a commit info by `git show`
 class GitShowParser
-  def initialize(sha)
-    @sha = sha
+  def initialize(git_show_str)
+    @git_show_str = git_show_str
     @files = []
     @type = :modified
   end
@@ -104,8 +104,7 @@ class GitShowParser
     count = {}
     reset_diff_count(count)
 
-    git_show_str = `git show #{@sha}`
-    git_show_str.split(/\n/).each do |line|
+    @git_show_str.split(/\n/).each do |line|
       if header && !diff_head?(line)
         parse_header(line)
       elsif header && diff_head?(line)
