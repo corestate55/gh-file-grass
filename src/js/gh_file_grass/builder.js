@@ -68,12 +68,18 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
     return 1
   }
 
-  _isDstStatRenamed(stat) {
-    const dstStat = this._findDstStat(stat)
-    if (dstStat) {
-      return this._isRenamedStat(dstStat) || stat.path !== dstStat.path
+  _areRenamedDstStatsOf(stat) {
+    const dstStats = this._findAllDstStats(stat)
+    if (dstStats.length < 1) {
+      return false
     }
-    return false
+    const results = dstStats.map(
+      dstStat => {
+        return this._isRenamedStat(dstStat) || stat.path !== dstStat.path
+      }
+    )
+    // if exists false in results: stat has NOT-RENAMED destination in dstStats.
+    return results.reduce((acc, curr) => acc && curr, true)
   }
 
   _lifeEndIndex(file) {
@@ -82,7 +88,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       // console.log('- end-1: ', stat1)
       return this._indexOfCommit(stat1.sha_short)
     }
-    const stat2 = this._findStatsByFile(file.name).find(d => this._isDstStatRenamed(d))
+    const stat2 = this._findStatsByFile(file.name).find(d => this._areRenamedDstStatsOf(d))
     if (stat2) {
       // console.log('- end-2: ', stat2)
       return this._indexOfCommit(stat2.sha_short)
@@ -181,26 +187,28 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
     return this.files.map(d => d.name).indexOf(key) + 1
   }
 
-  _findDstStat(stat) {
+  _findAllDstStats(stat) {
     if (stat.dst === '0000000' || stat.dst === '') {
-      return undefined
+      return []
     }
-    return this.stats.find(d => d.src === stat.dst)
+    return this.stats.filter(d => d.src === stat.dst)
   }
 
   _makeStatsArrow() {
     const arrows = []
     const dxy = this.lc / 2
     for (const stat of this.stats) {
-      const dstStat = this._findDstStat(stat)
-      if (!dstStat) {
+      const dstStats = this._findAllDstStats(stat)
+      if (dstStats.length < 1) {
         continue
       }
-      arrows.push({
-        sourceIndex: stat.index,
-        targetIndex: dstStat.index,
-        source: [stat.px + dxy, stat.py + dxy],
-        target: [dstStat.px + dxy, dstStat.py + dxy]
+      dstStats.forEach(dstStat => {
+        arrows.push({
+          sourceIndex: stat.index,
+          targetIndex: dstStat.index,
+          source: [stat.px + dxy, stat.py + dxy],
+          target: [dstStat.px + dxy, dstStat.py + dxy]
+        })
       })
     }
     const classBy = d => [
