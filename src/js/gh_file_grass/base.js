@@ -1,5 +1,8 @@
 import { json } from 'd3-fetch'
 import { select } from 'd3-selection'
+import GHLogFiles from './files'
+import GHLogCommits from './commits'
+import GHLogStats from './stats'
 
 export default class GHFileGrassBase {
   constructor() {
@@ -7,11 +10,6 @@ export default class GHFileGrassBase {
     this.py0 = 100
     this.lc = this.fontSize * 1.2
     this.dc = this.fontSize * 0.4
-  }
-
-  _maxFileLength() {
-    const fileLengthList = this.files.map(d => d.name.length)
-    return Math.max(...fileLengthList)
   }
 
   // Function `_px()` and `_py()` are used to calculate initial position
@@ -33,11 +31,11 @@ export default class GHFileGrassBase {
     const data = await json(logUri)
     this.branch = data.branch
     this.origin = data.origin
-    this.files = data.files
-    this.commits = data.commits.reverse()
-    this.stats = data.stats
+    this.files = new GHLogFiles(data.files)
+    this.commits = new GHLogCommits(data.commits)
+    this.stats = new GHLogStats(data.stats)
 
-    this.px0 = this._maxFileLength() * this.fontSize * 0.7
+    this.px0 = this.files.maxFileNameLength() * this.fontSize * 0.7
     this.width0 = this.px0 + this._px(this.commits.length) + 50
     this.height0 = this.py0 + this._py(this.files.length) + 50
     this.width1 = this.width0 - this.px0

@@ -6,7 +6,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
   _makeFileLabels() {
     this._selectClippedGroup('files')
       .selectAll('text.file-label')
-      .data(this.files)
+      .data(this.files.files)
       .enter()
       .append('a')
       .attr('xlink:href', d => `${this.origin}/blob/${this.branch}/${d.name}`)
@@ -23,7 +23,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
   _makeCommitLabels() {
     this._selectClippedGroup('commits')
       .selectAll('text.commit-label')
-      .data(this.commits)
+      .data(this.commits.commits)
       .enter()
       .append('a')
       .attr('xlink:href', d => `${this.origin}/commit/${d.sha}`)
@@ -38,66 +38,50 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .text(d => d.sha_short)
   }
 
-  _findStatsByFile(file) {
-    return this.stats.filter(d => d.path === file)
-  }
-
-  _findStatByFileAndType(file, type) {
-    return this.stats.find(d => d.path === file && d.type === type)
-  }
-
-  _isRenamedStat(stat) {
-    return stat.stat_path.src !== stat.stat_path.dst
-  }
-
-  _findStatByFileAndRenamed(file) {
-    return this.stats.find(d => d.path === file && this._isRenamedStat(d))
-  }
-
   _lifeStartIndex(file) {
-    const stat1 = this._findStatByFileAndType(file.name, 'new')
+    const stat1 = this.stats.findByFileAndType(file.name, 'new')
     if (stat1) {
       // console.log(`- start-1: `, stat1)
-      return this._indexOfCommit(stat1.sha_short)
+      return this.commits.indexOf(stat1.sha_short)
     }
-    const stat2 = this._findStatByFileAndRenamed(file.name)
+    const stat2 = this.stats.findByFileAndRenamed(file.name)
     if (stat2) {
       // console.log('- start-2: ', stat2)
-      return this._indexOfCommit(stat2.sha_short)
+      return this.commits.indexOf(stat2.sha_short)
     }
     return 1
   }
 
   _areRenamedDstStatsOf(stat) {
-    const dstStats = this._findAllDstStats(stat)
+    const dstStats = this.stats.findAllDstOf(stat)
     if (dstStats.length < 1) {
       return false
     }
     const results = dstStats.map(dstStat => {
-      return this._isRenamedStat(dstStat) || stat.path !== dstStat.path
+      return dstStat.isRenamedStat() || stat.path !== dstStat.path
     })
     // if exists false in results: stat has NOT-RENAMED destination in dstStats.
     return results.reduce((acc, curr) => acc && curr, true)
   }
 
   _lifeEndIndex(file) {
-    const stat1 = this._findStatByFileAndType(file.name, 'deleted')
+    const stat1 = this.stats.findByFileAndType(file.name, 'deleted')
     if (stat1) {
       // console.log('- end-1: ', stat1)
-      return this._indexOfCommit(stat1.sha_short)
+      return this.commits.indexOf(stat1.sha_short)
     }
-    const stat2 = this._findStatsByFile(file.name).find(d =>
+    const stat2 = this.stats.findByFile(file.name).find(d =>
       this._areRenamedDstStatsOf(d)
     )
     if (stat2) {
       // console.log('- end-2: ', stat2)
-      return this._indexOfCommit(stat2.sha_short)
+      return this.commits.indexOf(stat2.sha_short)
     }
     return this.commits.length
   }
 
   _makeFileLifeStatsRect() {
-    for (const file of this.files) {
+    for (const file of this.files.files) {
       // console.log(`file: ${file.name}`)
       const startIndex = this._lifeStartIndex(file)
       const endIndex = this._lifeEndIndex(file)
@@ -127,28 +111,10 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
     }
   }
 
-  _classifyStatsByModifiedLines() {
-    const stepDiv = this.stats.length / 4
-    let count = 1
-    let step = stepDiv
-    this.stats
-      .sort((a, b) => a.lines - b.lines)
-      .forEach((d, i) => {
-        if (i > step) {
-          count++
-          step = stepDiv * count
-        }
-        d.modifiedClass = count
-      })
-    this.stats.sort((a, b) => a.index - b.index)
-  }
-
   _makeStatsRect() {
-    this._classifyStatsByModifiedLines()
-
     const classBy = d => {
-      d.fileIndex = this._indexOfFile(d.path)
-      d.commitIndex = this._indexOfCommit(d.sha_short)
+      d.fileIndex = this.files.indexOf(d.path)
+      d.commitIndex = this.commits.indexOf(d.sha_short)
       return [
         'stats',
         `stat-${d.index}`,
@@ -160,7 +126,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
 
     this._selectClippedGroup('stats')
       .selectAll('rect.stats')
-      .data(this.stats)
+      .data(this.stats.stats)
       .enter()
       .append('rect')
       .attr('class', classBy)
@@ -171,33 +137,18 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
   }
 
   _rectX(stat) {
-    return this._px(this._indexOfCommit(stat.sha_short), stat)
+    return this._px(this.commits.indexOf(stat.sha_short), stat)
   }
 
   _rectY(stat) {
-    return this._py(this._indexOfFile(stat.path), stat)
-  }
-
-  _indexOfCommit(sha_short) {
-    return this.commits.map(d => d.sha_short).indexOf(sha_short) + 1
-  }
-
-  _indexOfFile(key) {
-    return this.files.map(d => d.name).indexOf(key) + 1
-  }
-
-  _findAllDstStats(stat) {
-    if (stat.dst === '0000000' || stat.dst === '') {
-      return []
-    }
-    return this.stats.filter(d => d.src === stat.dst)
+    return this._py(this.files.indexOf(stat.path), stat)
   }
 
   _makeStatsArrow() {
     const arrows = []
     const dxy = this.lc / 2
-    for (const stat of this.stats) {
-      const dstStats = this._findAllDstStats(stat)
+    for (const stat of this.stats.stats) {
+      const dstStats = this.stats.findAllDstOf(stat)
       if (dstStats.length < 1) {
         continue
       }
@@ -224,7 +175,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
   }
 
   _makeCommitHistogram() {
-    const commitHist = this.files.map(d => ({
+    const commitHist = this.files.files.map(d => ({
       index: d.index,
       name: d.name, // for debug
       hist: d.commits.length
