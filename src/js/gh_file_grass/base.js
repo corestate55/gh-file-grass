@@ -47,25 +47,41 @@ export default class GHFileGrassBase {
   _makeGroups() {
     const groupData = [
       {
-        keyword: 'commits', px: this.px0, py: this.py0,
+        keyword: 'commits',
+        px: this.px0,
+        py: this.py0,
         clipPath: {
-          x: 0, y: -this.py0, width: this.width1, height: this.py0
+          x: 0,
+          y: -this.py0,
+          width: this.width1,
+          height: this.py0
         }
       },
       {
-        keyword: 'files', px: 0, py: this.py0,
+        keyword: 'files',
+        px: 0,
+        py: this.py0,
         clipPath: {
-          x: 0, y: 0, width: this.px0, height: this.height1
+          x: 0,
+          y: 0,
+          width: this.px0,
+          height: this.height1
         }
       },
       {
-        keyword: 'stats', px: this.px0, py: this.py0,
+        keyword: 'stats',
+        px: this.px0,
+        py: this.py0,
         clipPath: {
-          x: 0, y: 0, width: this.width1, height: this.height1
+          x: 0,
+          y: 0,
+          width: this.width1,
+          height: this.height1
         }
       }
     ]
-    const groups = this.svg.selectAll('g')
+    const groups = this.svg
+      .selectAll('g')
       .data(groupData)
       .enter()
       .append('g')
@@ -80,9 +96,7 @@ export default class GHFileGrassBase {
       .attr('y', d => d.clipPath.y)
       .attr('width', d => d.clipPath.width)
       .attr('height', d => d.clipPath.height)
-    groups
-      .append('g')
-      .attr('clip-path', d => `url(#${d.keyword}-clip)`)
+    groups.append('g').attr('clip-path', d => `url(#${d.keyword}-clip)`)
   }
 
   _makeSVGCanvas() {

@@ -1,6 +1,6 @@
 import { select, event } from 'd3-selection'
 import { drag } from 'd3-drag'
-import GHFileGrassBuilder from "./builder"
+import GHFileGrassBuilder from './builder'
 
 export default class GHFileGrassOperator extends GHFileGrassBuilder {
   _selectObject(keyword, index, callback) {
@@ -31,7 +31,8 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
   _addFilesHandler() {
     const mouseOver = d => this._selectFile(d.index, this._addSelected)
     const mouseOut = d => this._selectFile(d.index, this._removeSelected)
-    this._selectClippedGroup('files').selectAll('text')
+    this._selectClippedGroup('files')
+      .selectAll('text')
       .on('mouseover', mouseOver)
       .on('mouseout', mouseOut)
   }
@@ -42,7 +43,10 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       this._liStr('SHA', commit.sha),
       this._liStr('Date', commit.date),
       this._liStr('Message', commit.message),
-      this._liStr('Author', `${commit.author.name} &lt;${commit.author.email}&gt;`),
+      this._liStr(
+        'Author',
+        `${commit.author.name} &lt;${commit.author.email}&gt;`
+      ),
       '</ul>'
     ].join('')
   }
@@ -56,7 +60,8 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       this._selectCommit(d.index, this._removeSelected)
       this._disableTooltip()
     }
-    this._selectClippedGroup('commits').selectAll('text')
+    this._selectClippedGroup('commits')
+      .selectAll('text')
       .on('mouseover', mouseOver)
       .on('mouseout', mouseOut)
   }
@@ -73,8 +78,10 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
     const insRepeat = cal(ins, total)
     const delRepeat = cal(del, total)
     const keepRepeat = 5 - insRepeat - delRepeat
-    const barData = {ins: insRepeat, del: delRepeat, keep: keepRepeat}
-    return Object.keys(barData).map(key => barStr(key, barData[key])).join('')
+    const barData = { ins: insRepeat, del: delRepeat, keep: keepRepeat }
+    return Object.keys(barData)
+      .map(key => barStr(key, barData[key]))
+      .join('')
   }
 
   _insStr(value) {
@@ -147,7 +154,8 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
         this._disableTooltip()
       }
     }
-    this._selectClippedGroup('stats').selectAll('rect')
+    this._selectClippedGroup('stats')
+      .selectAll('rect')
       .on('mouseover', mouseOver)
       .on('mouseout', mouseOut)
   }
@@ -163,7 +171,8 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
         this._selectStat(statIndex, this._removeSelected)
       })
     }
-    this._selectClippedGroup('stats').selectAll('path')
+    this._selectClippedGroup('stats')
+      .selectAll('path')
       .on('mouseover', mouseOver)
       .on('mouseout', mouseOut)
   }
@@ -184,22 +193,29 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
 
   _addDragToGroups() {
     const dragged = () => {
-      this._selectClippedGroup('commits').selectAll('text')
-        .attr('x', d => d.px += event.dx)
+      this._selectClippedGroup('commits')
+        .selectAll('text')
+        .attr('x', d => (d.px += event.dx))
         .attr('transform', d => `rotate(-60,${d.px},${d.py})`)
-      this._selectClippedGroup('files').selectAll('text')
-        .attr('y', d => d.py += event.dy)
-      this._selectClippedGroup('stats').selectAll('rect')
-        .attr('x', d => d.px += event.dx)
-        .attr('y', d => d.py += event.dy)
-      this._selectClippedGroup('stats').selectAll('path')
+      this._selectClippedGroup('files')
+        .selectAll('text')
+        .attr('y', d => (d.py += event.dy))
+      this._selectClippedGroup('stats')
+        .selectAll('rect')
+        .attr('x', d => (d.px += event.dx))
+        .attr('y', d => (d.py += event.dy))
+      this._selectClippedGroup('stats')
+        .selectAll('path')
         .attr('d', d => {
-          d.source[0] += event.dx; d.source[1] += event.dy
-          d.target[0] += event.dx; d.target[1] += event.dy
+          d.source[0] += event.dx
+          d.source[1] += event.dy
+          d.target[0] += event.dx
+          d.target[1] += event.dy
           return this.statsLink(d)
-      })
-      this._selectClippedGroup('files').selectAll('rect')
-        .attr('y', d => d.py += event.dy)
+        })
+      this._selectClippedGroup('files')
+        .selectAll('rect')
+        .attr('y', d => (d.py += event.dy))
     }
 
     // NOTICE: insert before 'g' (group of clipped-stats)

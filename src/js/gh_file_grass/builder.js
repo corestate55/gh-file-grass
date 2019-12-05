@@ -73,11 +73,9 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
     if (dstStats.length < 1) {
       return false
     }
-    const results = dstStats.map(
-      dstStat => {
-        return this._isRenamedStat(dstStat) || stat.path !== dstStat.path
-      }
-    )
+    const results = dstStats.map(dstStat => {
+      return this._isRenamedStat(dstStat) || stat.path !== dstStat.path
+    })
     // if exists false in results: stat has NOT-RENAMED destination in dstStats.
     return results.reduce((acc, curr) => acc && curr, true)
   }
@@ -88,7 +86,9 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       // console.log('- end-1: ', stat1)
       return this._indexOfCommit(stat1.sha_short)
     }
-    const stat2 = this._findStatsByFile(file.name).find(d => this._areRenamedDstStatsOf(d))
+    const stat2 = this._findStatsByFile(file.name).find(d =>
+      this._areRenamedDstStatsOf(d)
+    )
     if (stat2) {
       // console.log('- end-2: ', stat2)
       return this._indexOfCommit(stat2.sha_short)
@@ -103,17 +103,16 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       const endIndex = this._lifeEndIndex(file)
       // console.log(`- start:${startIndex}, end:${endIndex}`)
       const range = Array.from(
-        {length: endIndex - startIndex + 1},
+        { length: endIndex - startIndex + 1 },
         (_, i) => ({
           fileIndex: file.index,
           commitIndex: i + startIndex
         })
       )
-      const classBy = d => [
-        'file-life',
-        `file-${d.fileIndex}`,
-        `commit-${d.commitIndex}`
-      ].join(' ')
+      const classBy = d =>
+        ['file-life', `file-${d.fileIndex}`, `commit-${d.commitIndex}`].join(
+          ' '
+        )
 
       this._selectClippedGroup('stats')
         .selectAll(`rect.file-${file.index}`)
@@ -211,11 +210,8 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
         })
       })
     }
-    const classBy = d => [
-      'stat-arrow',
-      `stat-${d.sourceIndex}`,
-      `stat-${d.targetIndex}`
-    ].join(' ')
+    const classBy = d =>
+      ['stat-arrow', `stat-${d.sourceIndex}`, `stat-${d.targetIndex}`].join(' ')
 
     this.statsLink = linkHorizontal() // link generator
     this._selectClippedGroup('stats')

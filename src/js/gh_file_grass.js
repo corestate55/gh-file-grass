@@ -1,4 +1,4 @@
-import GHFileGrassOperator from "./gh_file_grass/operator"
+import GHFileGrassOperator from './gh_file_grass/operator'
 
 export default class GHFileGrass extends GHFileGrassOperator {
   async draw(logUrl) {
