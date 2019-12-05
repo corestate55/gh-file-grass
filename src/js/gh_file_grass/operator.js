@@ -77,16 +77,32 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
     return Object.keys(barData).map(key => barStr(key, barData[key])).join('')
   }
 
+  _insStr(value) {
+    return `<span class="ins">${value}</span>`
+  }
+
+  _delStr(value) {
+    return `<span class="del">${value}</span>`
+  }
+
   _liStr(key, value) {
     return `<li><span class="key">${key}:</span> ${value}</li>`
   }
 
+  _typeStr(value) {
+    if (value === 'new') {
+      return this._insStr(value)
+    } else if (value === 'deleted') {
+      return this._delStr(value)
+    } else {
+      return value
+    }
+  }
   _statTooltipHtml(stat) {
     const sp = stat.stat_path // alias
     const movedPath = sp.src !== sp.dst ? this._liStr('Renamed', sp.path) : ''
     const modifiedIndicator = `
-      <li><span class="ins">+${stat.insertions}</span>,
-          <span class="del">-${stat.deletions}</span>
+      <li>+${this._insStr(stat.insertions)},-${this._delStr(stat.deletions)}
           : ${this._statModifiedLinesBar(stat.insertions, stat.deletions)}
       </li>`
 
@@ -94,7 +110,7 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       '<ul>',
       this._liStr('Commit', stat.sha_short),
       this._liStr('File', stat.path),
-      this._liStr('Type', stat.type),
+      this._liStr('Type', this._typeStr(stat.type)),
       this._liStr('Index', `${stat.src}..${stat.dst} ${stat.mode}`),
       movedPath,
       modifiedIndicator,
