@@ -112,6 +112,9 @@ div#stat-tooltip {
     &.key {
       font-weight: bold;
     }
+    &.files {
+      font-weight: bold;
+    }
     &.ins {
       color: #6fdc89; // #28a745; // original
       font-weight: bold;

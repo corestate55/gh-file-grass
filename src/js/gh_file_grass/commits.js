@@ -8,6 +8,33 @@ class GHLogCommit {
     this.index = commit.index
     this.stat_total = commit.stat_total
   }
+
+  _liStr(key, value) {
+    return `<li><span class="key">${key}:</span> ${value}</li>`
+  }
+
+  _statTotalStr() {
+    const st = this.stat_total
+    return `<li><span class="files">${st.files} changed
+      ${st.files > 1 ? 'files' : 'file'}</span>
+      with <span class="ins">${st.insertions} additions</span>
+      and <span class="del">${st.deletions} deletions</span>.`
+  }
+
+  tooltipHtml() {
+    return [
+      '<ul>',
+      this._liStr('SHA', this.sha),
+      this._liStr('Date', this.date),
+      this._liStr('Message', this.message),
+      this._liStr(
+        'Author',
+        `${this.author.name} &lt;${this.author.email}&gt;`
+      ),
+      this._statTotalStr(),
+      '</ul>'
+    ].join('')
+  }
 }
 
 export default class GHLogCommits {

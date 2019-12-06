@@ -37,24 +37,10 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       .on('mouseout', mouseOut)
   }
 
-  _commitTooltipHtml(commit) {
-    return [
-      '<ul>',
-      this._liStr('SHA', commit.sha),
-      this._liStr('Date', commit.date),
-      this._liStr('Message', commit.message),
-      this._liStr(
-        'Author',
-        `${commit.author.name} &lt;${commit.author.email}&gt;`
-      ),
-      '</ul>'
-    ].join('')
-  }
-
   _addCommitsHandler() {
     const mouseOver = d => {
       this._selectCommit(d.index, this._addSelected)
-      this._enableTooltip(this._commitTooltipHtml(d))
+      this._enableTooltip(d.tooltipHtml())
     }
     const mouseOut = d => {
       this._selectCommit(d.index, this._removeSelected)
@@ -64,65 +50,6 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       .selectAll('text')
       .on('mouseover', mouseOver)
       .on('mouseout', mouseOut)
-  }
-
-  _statModifiedLinesBar(ins, del) {
-    const total = ins + del
-    const box = '■'
-    const barStr = (classStr, count) => {
-      return `<span class="${classStr}">${box.repeat(count)}</span>`
-    }
-    const cal = (val, total) => {
-      return total <= 5 ? val : Math.floor(val / (total / 5))
-    }
-    const insRepeat = cal(ins, total)
-    const delRepeat = cal(del, total)
-    const keepRepeat = 5 - insRepeat - delRepeat
-    const barData = { ins: insRepeat, del: delRepeat, keep: keepRepeat }
-    return Object.keys(barData)
-      .map(key => barStr(key, barData[key]))
-      .join('')
-  }
-
-  _insStr(value) {
-    return `<span class="ins">${value}</span>`
-  }
-
-  _delStr(value) {
-    return `<span class="del">${value}</span>`
-  }
-
-  _liStr(key, value) {
-    return `<li><span class="key">${key}:</span> ${value}</li>`
-  }
-
-  _typeStr(value) {
-    if (value === 'new') {
-      return this._insStr(value)
-    } else if (value === 'deleted') {
-      return this._delStr(value)
-    } else {
-      return value
-    }
-  }
-  _statTooltipHtml(stat) {
-    const sp = stat.stat_path // alias
-    const movedPath = sp.src !== sp.dst ? this._liStr('Renamed', sp.path) : ''
-    const modifiedIndicator = `
-      <li>+${this._insStr(stat.insertions)},-${this._delStr(stat.deletions)}
-          : ${this._statModifiedLinesBar(stat.insertions, stat.deletions)}
-      </li>`
-
-    return [
-      '<ul>',
-      this._liStr('Commit', stat.sha_short),
-      this._liStr('File', stat.path),
-      this._liStr('Type', this._typeStr(stat.type)),
-      this._liStr('Index', `${stat.src}..${stat.dst} ${stat.mode}`),
-      movedPath,
-      modifiedIndicator,
-      '</ul>'
-    ].join('')
   }
 
   _enableTooltip(htmlStr) {
@@ -143,7 +70,7 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       this._selectFile(d.fileIndex, this._addSelected)
       if (d.index) {
         this._selectStat(d.index, this._addSelected)
-        this._enableTooltip(this._statTooltipHtml(d))
+        this._enableTooltip(d.tooltipHtml())
       }
     }
     const mouseOut = d => {
@@ -177,13 +104,16 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       .on('mouseout', mouseOut)
   }
 
+  _historgramToolTipHtml(d) {
+    return `${d.hist} ${d.hist > 1 ? 'commits' : 'commit'}`
+  }
+
   _addCommitHistogramHandler() {
     this._selectClippedGroup('files')
       .selectAll('rect.commit-hist')
       .on('mouseover', d => {
         this._selectFile(d.index, this._addSelected)
-        const htmlStr = `${d.hist} ${d.hist > 1 ? 'commits' : 'commit'}`
-        this._enableTooltip(htmlStr)
+        this._enableTooltip(this._historgramToolTipHtml(d))
       })
       .on('mouseout', d => {
         this._selectFile(d.index, this._removeSelected)

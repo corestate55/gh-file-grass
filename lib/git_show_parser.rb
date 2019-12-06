@@ -170,7 +170,7 @@ class GitShowParser
         insertions: insertions,
         deletions: deletions,
         lines: insertions + deletions,
-        file: @files.length
+        files: @files.length
       }
     }
     [commit]
