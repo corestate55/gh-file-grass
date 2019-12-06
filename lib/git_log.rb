@@ -121,6 +121,12 @@ class GitLog
     # and delete [stat][files] it was followed as @stats array.
     @commits.each do |commit|
       commit[:stat_total] = commit[:stat][:total] # rename
+      # invert ins/del
+      be_ins = commit[:stat][:total][:deletions]
+      be_del = commit[:stat][:total][:insertions]
+      commit[:stat_total][:insertions] = be_ins
+      commit[:stat_total][:deletions] = be_del
+      # delete unused key
       commit.delete(:stat)
     end
   end

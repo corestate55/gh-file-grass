@@ -13,11 +13,47 @@ class GHLogStat {
     this.index = stat.index
   }
 
-  isRenamedStat() {
+  isRenamed() {
     return this.stat_path.src !== this.stat_path.dst
   }
 
-  _statModifiedLinesBar(ins, del) {
+  isModified() {
+    return this.lines > 0
+  }
+
+  _svgActionMark(mark) {
+    return (
+      '<svg class="action" width="14" height="16" aria-hidden="true">' +
+      mark +
+      '</svg>'
+    )
+  }
+
+  _addedMark() {
+    const mark =
+      '<path class="added-mark" fill-rule="evenodd" d="M13 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 13H1V2h12v12zM6 9H3V7h3V4h2v3h3v2H8v3H6V9z"></path>'
+    return this._svgActionMark(mark)
+  }
+
+  _deletedMark() {
+    const mark =
+      '<path class="deleted-mark" fill-rule="evenodd" d="M13 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 13H1V2h12v12zm-2-5H3V7h8v2z"></path>'
+    return this._svgActionMark(mark)
+  }
+
+  _modifiedMark() {
+    const mark =
+      '<path class="modified-mark" fill-rule="evenodd" d="M13 1H1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1zm0 13H1V2h12v12zM4 8c0-1.66 1.34-3 3-3s3 1.34 3 3-1.34 3-3 3-3-1.34-3-3z"></path>'
+    return this._svgActionMark(mark)
+  }
+
+  _renamedMark() {
+    const mark =
+      '<path class="renamed-mark" fill-rule="evenodd" d="M6 9H3V7h3V4l5 4-5 4V9zm8-7v12c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h12c.55 0 1 .45 1 1zm-1 0H1v12h12V2z"></path>'
+    return this._svgActionMark(mark)
+  }
+
+  _statBarStr(ins, del) {
     const total = ins + del
     const box = '■'
     const barStr = (classStr, count) => {
@@ -35,6 +71,10 @@ class GHLogStat {
       .join('')
   }
 
+  _liStr(value) {
+    return `<li>${value}</li>`
+  }
+
   _insStr(value) {
     return `<span class="ins">${value}</span>`
   }
@@ -43,36 +83,50 @@ class GHLogStat {
     return `<span class="del">${value}</span>`
   }
 
-  _liStr(key, value) {
-    return `<li><span class="key">${key}:</span> ${value}</li>`
+  _modStr(value) {
+    return `<span class="mod">${value}</span>`
   }
 
-  _typeStr(value) {
-    if (value === 'new') {
-      return this._insStr(value)
-    } else if (value === 'deleted') {
-      return this._delStr(value)
+  _fileActionStr() {
+    const space = '&nbsp;&nbsp;'
+    const markedStr = (mark, str) => [mark, str].join(space)
+
+    if (this.type === 'new') {
+      return markedStr(this._addedMark(), this._insStr(this.path))
+    } else if (this.type === 'deleted') {
+      return markedStr(this._deletedMark(), this._delStr(this.path))
+    } else if (this.isRenamed()) {
+      return markedStr(this._renamedMark(), this.stat_path.path)
     } else {
-      return value
+      // modified
+      const str = this.isRenamed()
+        ? this.stat_path.path
+        : this._modStr(this.path)
+      return markedStr(this._modifiedMark(), str)
     }
   }
 
-  tooltipHtml() {
-    const sp = this.stat_path // alias
-    const movedPath = this.isRenamedStat() ? this._liStr('Renamed', sp.path) : ''
-    const modifiedIndicator = `
-      <li>+${this._insStr(this.insertions)},-${this._delStr(this.deletions)}
-          : ${this._statModifiedLinesBar(this.insertions, this.deletions)}
-      </li>`
+  _diffIndexStr() {
+    if (!this.isModified()) {
+      return ''
+    }
+    return this._liStr(`${this.src}..${this.dst} ${this.mode}`)
+  }
 
+  _statIndicatorStr() {
+    const ins = '+' + this.insertions
+    const del = '-' + this.deletions
+    const bar = this._statBarStr(this.insertions, this.deletions)
+    return `${this._insStr(ins)}, ${this._delStr(del)}&nbsp;${bar}`
+  }
+
+  tooltipHtml() {
     return [
       '<ul>',
-      this._liStr('Commit', this.sha_short),
-      this._liStr('File', this.path),
-      this._liStr('Type', this._typeStr(this.type)),
-      this._liStr('Index', `${this.src}..${this.dst} ${this.mode}`),
-      movedPath,
-      modifiedIndicator,
+      this._liStr(this.sha_short),
+      this._liStr(this._fileActionStr()),
+      this._liStr(this._statIndicatorStr()),
+      this._diffIndexStr(), // empty for no-diff stat
       '</ul>'
     ].join('')
   }
@@ -85,7 +139,19 @@ export default class GHLogStats {
     this._classifyByModifiedLines()
   }
 
-  findByFile(file) {
+  isSamePathDstStat(stat) {
+    const dstStats = this.findAllDstOf(stat)
+    if (dstStats.length < 1) {
+      return false
+    }
+    const results = dstStats.map(dstStat => {
+      return dstStat.isRenamed() || stat.path !== dstStat.path
+    })
+    // if exists false in results: stat has NOT-RENAMED destination in dstStats.
+    return results.reduce((acc, curr) => acc && curr, true)
+  }
+
+  findAllByPath(file) {
     return this.stats.filter(d => d.path === file)
   }
 
@@ -94,7 +160,7 @@ export default class GHLogStats {
   }
 
   findByFileAndRenamed(file) {
-    return this.stats.find(d => d.path === file && d.isRenamedStat())
+    return this.stats.find(d => d.path === file && d.isRenamed())
   }
 
   findAllDstOf(stat) {

@@ -9,7 +9,6 @@ $strong-stroke-color: #ec939a;
 
 text {
   font-size: 10pt;
-  transition: fill .1s ease-in-out, font-weight .1s ease-in-out;
 
   &.file-label {
     text-anchor: start;
@@ -27,7 +26,6 @@ text {
 }
 
 %rect-base {
-  transition: fill .1s ease-in-out, fill-opacity .1s ease-in-out;
   fill-opacity: 0.6;
   &.selected {
     fill-opacity: 1.0;
@@ -65,24 +63,28 @@ rect {
   }
 }
 
-path.stat-arrow {
-  transition: stroke .1s ease-in-out;
-
-  stroke: $base-color;
-  stroke-width: 3pt;
-  stroke-opacity: 0.5;
-  fill: none;
-  &.selected {
-    stroke-width: 6pt;
-    stroke: $strong-stroke-color;
+path {
+  &.stat-arrow {
+    stroke: $base-color;
+    stroke-width: 3pt;
+    stroke-opacity: 0.5;
+    fill: none;
+    &.selected {
+      stroke-width: 6pt;
+      stroke: $strong-stroke-color;
+    }
   }
 }
 
-$tooltip-keep-color: #d1d5da;
+$keep-color: #d1d5da;
+$added-color: #6fdc89; // #28a745; // original
+$deleted-color: #ec939a; // #cb2431; // original
+$modified-color: #f9d86c; // #dbab09; // original
+
 div#stat-tooltip {
   font-size: 10pt;
   position: absolute;
-  background-color: rgba(0, 0, 0, 0.7);;
+  background-color: rgba(0, 0, 0, 0.7);
   padding: 5pt;
   color: white;
   border-radius: 8px; // rounded corner
@@ -95,7 +97,7 @@ div#stat-tooltip {
   &:after {
     border: 12px solid transparent;
     border-left-width: 0;
-    border-right-color: rgba(0, 0, 0, 0.7);;
+    border-right-color: rgba(0, 0, 0, 0.7);
     content: "";
     display: block;
     left: -12px;
@@ -116,16 +118,39 @@ div#stat-tooltip {
       font-weight: bold;
     }
     &.ins {
-      color: #6fdc89; // #28a745; // original
+      color: $added-color;
       font-weight: bold;
     }
     &.del {
-      color: #ec939a; // #cb2431; // original
+      color: $deleted-color;
       font-weight: bold;
     }
     &.keep {
-      color: $tooltip-keep-color;
+      color: $keep-color;
       font-weight: bold;
+    }
+    &.mod {
+      color: $modified-color;
+    }
+  }
+}
+
+svg.action {
+  display: inline-block;
+  vertical-align: text-bottom;
+
+  path {
+    &.added-mark {
+      fill: $added-color;
+    }
+    &.deleted-mark {
+      fill: $deleted-color;
+    }
+    &.renamed-mark {
+      fill: $keep-color;
+    }
+    &.modified-mark {
+      fill: $modified-color;
     }
   }
 }

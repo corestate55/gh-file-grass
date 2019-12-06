@@ -9,29 +9,41 @@ class GHLogCommit {
     this.stat_total = commit.stat_total
   }
 
-  _liStr(key, value) {
-    return `<li><span class="key">${key}:</span> ${value}</li>`
+  _liStr(value) {
+    return `<li>${value}</li>`
+  }
+
+  _insStr(value) {
+    return `<span class="ins">${value}</span>`
+  }
+
+  _delStr(value) {
+    return `<span class="del">${value}</span>`
+  }
+
+  _filesStr(value) {
+    return `<span class="files">${value}</span>`
   }
 
   _statTotalStr() {
-    const st = this.stat_total
-    return `<li><span class="files">${st.files} changed
-      ${st.files > 1 ? 'files' : 'file'}</span>
-      with <span class="ins">${st.insertions} additions</span>
-      and <span class="del">${st.deletions} deletions</span>.`
+    const st = this.stat_total // shortening alias
+    const file = `${st.files} changed ${st.files > 1 ? 'files' : 'file'}`
+    const add = `${st.insertions} additions`
+    const del = `${st.deletions} deletions`
+
+    return `${this._filesStr(file)} with ${this._insStr(
+      add
+    )} and ${this._delStr(del)}.`
   }
 
   tooltipHtml() {
     return [
       '<ul>',
-      this._liStr('SHA', this.sha),
-      this._liStr('Date', this.date),
-      this._liStr('Message', this.message),
-      this._liStr(
-        'Author',
-        `${this.author.name} &lt;${this.author.email}&gt;`
-      ),
-      this._statTotalStr(),
+      this._liStr(this.sha),
+      this._liStr(`${this.author.name} &lt;${this.author.email}&gt;`),
+      this._liStr(this.date),
+      this._liStr(this.message),
+      this._liStr(this._statTotalStr()),
       '</ul>'
     ].join('')
   }

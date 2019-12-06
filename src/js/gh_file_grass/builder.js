@@ -52,27 +52,15 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
     return 1
   }
 
-  _areRenamedDstStatsOf(stat) {
-    const dstStats = this.stats.findAllDstOf(stat)
-    if (dstStats.length < 1) {
-      return false
-    }
-    const results = dstStats.map(dstStat => {
-      return dstStat.isRenamedStat() || stat.path !== dstStat.path
-    })
-    // if exists false in results: stat has NOT-RENAMED destination in dstStats.
-    return results.reduce((acc, curr) => acc && curr, true)
-  }
-
   _lifeEndIndex(file) {
     const stat1 = this.stats.findByFileAndType(file.name, 'deleted')
     if (stat1) {
       // console.log('- end-1: ', stat1)
       return this.commits.indexOf(stat1.sha_short)
     }
-    const stat2 = this.stats.findByFile(file.name).find(d =>
-      this._areRenamedDstStatsOf(d)
-    )
+    const stat2 = this.stats
+      .findAllByPath(file.name)
+      .find(d => this.stats.isSamePathDstStat(d))
     if (stat2) {
       // console.log('- end-2: ', stat2)
       return this.commits.indexOf(stat2.sha_short)
@@ -124,6 +112,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       ].join(' ')
     }
 
+    // class attr (classBy) must be before rect[XY] to set files/commit index
     this._selectClippedGroup('stats')
       .selectAll('rect.stats')
       .data(this.stats.stats)
@@ -137,11 +126,11 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
   }
 
   _rectX(stat) {
-    return this._px(this.commits.indexOf(stat.sha_short), stat)
+    return this._px(stat.commitIndex, stat)
   }
 
   _rectY(stat) {
-    return this._py(this.files.indexOf(stat.path), stat)
+    return this._py(stat.fileIndex, stat)
   }
 
   _makeStatsArrow() {
