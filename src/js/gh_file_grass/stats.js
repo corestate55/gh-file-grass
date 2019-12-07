@@ -3,6 +3,7 @@ import GHLogStat from './stat'
 export default class GHLogStats {
   constructor(stats) {
     this.stats = stats.map(d => new GHLogStat(d))
+    this.all = this.stats // alias
     this.length = this.stats.length
     // this._classifyByModifiedLines()
     this._classifyByLog10ModifiedLines()

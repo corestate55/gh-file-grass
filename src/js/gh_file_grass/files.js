@@ -1,6 +1,7 @@
 export default class GHLogFiles {
   constructor(files) {
     this.files = files
+    this.all = this.files // alias
     this.length = this.files.length
   }
 

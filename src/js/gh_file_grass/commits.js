@@ -3,6 +3,7 @@ import GHLogCommit from './commit'
 export default class GHLogCommits {
   constructor(commits) {
     this.commits = commits.map(d => new GHLogCommit(d))
+    this.all = this.commits // alias
     this.length = commits.length
     this.sort()
   }
