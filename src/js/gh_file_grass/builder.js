@@ -115,9 +115,11 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
         })
       )
       const classBy = d =>
-        ['file-life', this._fileClass(d.fileIndex), this._commitClass(d.commitIndex)].join(
-          ' '
-        )
+        [
+          'file-life',
+          this._fileClass(d.fileIndex),
+          this._commitClass(d.commitIndex)
+        ].join(' ')
 
       this._selectClippedGroup('stats')
         .selectAll(`rect.file-${file.index}`)
@@ -185,7 +187,11 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       })
     }
     const classBy = d =>
-      ['stat-arrow', `stat-${d.sourceIndex}`, `stat-${d.targetIndex}`].join(' ')
+      [
+        'stat-arrow',
+        this._statClass(d.sourceIndex),
+        this._statClass(d.targetIndex)
+      ].join(' ')
 
     this.statsLink = linkHorizontal() // link generator
     this._selectClippedGroup('stats')

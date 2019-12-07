@@ -4,7 +4,6 @@ import GHFileGrassBuilder from './builder'
 
 export default class GHFileGrassOperator extends GHFileGrassBuilder {
   _selectObject(classStr, callback) {
-    console.log(`selectObject: `, classStr)
     const selection = this.svg.selectAll(`.${classStr}`)
     callback(selection)
   }
@@ -56,8 +55,9 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
   _positionMatrixOfId(id) {
     const target = document.getElementById(id)
     // attribute .[xy] are only for rect and text.
-    return target.getScreenCTM()
-      .translate(+ target.getAttribute('x'), + target.getAttribute('y'))
+    return target
+      .getScreenCTM()
+      .translate(+target.getAttribute('x'), +target.getAttribute('y'))
   }
 
   _enableTooltip(htmlStr, id) {
@@ -123,7 +123,10 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       .selectAll('rect.commit-hist')
       .on('mouseover', d => {
         this._selectFile(d.index, this._addSelected)
-        this._enableTooltip(this._historgramToolTipHtml(d), this._commitHistorgramId(d.index))
+        this._enableTooltip(
+          this._historgramToolTipHtml(d),
+          this._commitHistorgramId(d.index)
+        )
       })
       .on('mouseout', d => {
         this._selectFile(d.index, this._removeSelected)
