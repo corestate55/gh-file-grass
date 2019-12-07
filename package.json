@@ -10,7 +10,7 @@
     "format": "prettier --write 'src/**/*.{js,vue}'"
   },
   "dependencies": {
-    "core-js": "^3.3.2",
+    "core-js": "^3.4.7",
     "d3-drag": "^1.2.5",
     "d3-fetch": "^1.1.2",
     "d3-scale": "^3.2.1",
@@ -19,12 +19,12 @@
     "vue": "^2.6.10"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^4.0.0",
-    "@vue/cli-plugin-eslint": "^4.0.0",
-    "@vue/cli-service": "^4.0.0",
+    "@vue/cli-plugin-babel": "^4.1.1",
+    "@vue/cli-plugin-eslint": "^4.1.1",
+    "@vue/cli-service": "^4.1.1",
     "babel-eslint": "^10.0.3",
-    "eslint": "^5.16.0",
-    "eslint-plugin-vue": "^5.0.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-vue": "^6.0.1",
     "node-sass": "^4.13.0",
     "prettier-eslint": "^9.0.1",
     "sass-loader": "^8.0.0",
