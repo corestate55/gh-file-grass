@@ -3,21 +3,22 @@ import { drag } from 'd3-drag'
 import GHFileGrassBuilder from './builder'
 
 export default class GHFileGrassOperator extends GHFileGrassBuilder {
-  _selectObject(keyword, index, callback) {
-    const selection = this.svg.selectAll(`.${keyword}-${index}`)
+  _selectObject(classStr, callback) {
+    console.log(`selectObject: `, classStr)
+    const selection = this.svg.selectAll(`.${classStr}`)
     callback(selection)
   }
 
   _selectFile(fileIndex, callback) {
-    this._selectObject('file', fileIndex, callback)
+    this._selectObject(this._fileClass(fileIndex), callback)
   }
 
   _selectCommit(commitIndex, callback) {
-    this._selectObject('commit', commitIndex, callback)
+    this._selectObject(this._commitClass(commitIndex), callback)
   }
 
   _selectStat(statIndex, callback) {
-    this._selectObject('stat', statIndex, callback)
+    this._selectObject(this._statClass(statIndex), callback)
   }
 
   _addSelected(selection) {
@@ -40,7 +41,7 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
   _addCommitsHandler() {
     const mouseOver = d => {
       this._selectCommit(d.index, this._addSelected)
-      this._enableTooltip(d.tooltipHtml())
+      this._enableTooltip(d.tooltipHtml(), this._commitLabelId(d.index))
     }
     const mouseOut = d => {
       this._selectCommit(d.index, this._removeSelected)
@@ -52,11 +53,20 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       .on('mouseout', mouseOut)
   }
 
-  _enableTooltip(htmlStr) {
+  _positionMatrixOfId(id) {
+    const target = document.getElementById(id)
+    // attribute .[xy] are only for rect and text.
+    return target.getScreenCTM()
+      .translate(+ target.getAttribute('x'), + target.getAttribute('y'))
+  }
+
+  _enableTooltip(htmlStr, id) {
+    const matrix = this._positionMatrixOfId(id)
+    let yMargin = id.match(/commit.*label/) ? 1 : 2
     select('div#stat-tooltip')
       .style('visibility', 'visible')
-      .style('top', `${event.pageY - this.lc * 1.5}px`)
-      .style('left', `${event.pageX + this.lc * 2}px`)
+      .style('left', `${window.pageXOffset + matrix.e - this.lc * 1.25}px`)
+      .style('top', `${window.pageYOffset + matrix.f + this.lc * yMargin}px`)
       .html(htmlStr)
   }
 
@@ -70,7 +80,7 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       this._selectFile(d.fileIndex, this._addSelected)
       if (d.index) {
         this._selectStat(d.index, this._addSelected)
-        this._enableTooltip(d.tooltipHtml())
+        this._enableTooltip(d.tooltipHtml(), this._statRectId(d.index))
       }
     }
     const mouseOut = d => {
@@ -113,7 +123,7 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       .selectAll('rect.commit-hist')
       .on('mouseover', d => {
         this._selectFile(d.index, this._addSelected)
-        this._enableTooltip(this._historgramToolTipHtml(d))
+        this._enableTooltip(this._historgramToolTipHtml(d), this._commitHistorgramId(d.index))
       })
       .on('mouseout', d => {
         this._selectFile(d.index, this._removeSelected)

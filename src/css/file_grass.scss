@@ -7,6 +7,10 @@ $strong-stroke-color: #ec939a;
   font-weight: bold;
 }
 
+code {
+  font-family: Consolas, 'Courier New', Courier, Monaco, monospace;
+}
+
 text {
   font-size: 10pt;
 
@@ -18,6 +22,7 @@ text {
   }
 
   &.commit-label {
+    font-family: Consolas, 'Courier New', Courier, Monaco, monospace;
     text-anchor: start;
     &.selected {
       @extend %selected-label;
@@ -34,16 +39,16 @@ text {
 
 rect {
   &.stats {
-    &.mod-1 {
+    &.mod1 {
       fill: #c6e48b;
     }
-    &.mod-2 {
+    &.mod2 {
       fill: #7bc96f;
     }
-    &.mod-3 {
+    &.mod3 {
       fill: #239a3b;
     }
-    &.mod-4 {
+    &.mod4 {
       fill: #196127;
     }
     &.selected {
@@ -81,6 +86,7 @@ $added-color: #6fdc89; // #28a745; // original
 $deleted-color: #ec939a; // #cb2431; // original
 $modified-color: #f9d86c; // #dbab09; // original
 
+// ref. http://www.cssarrowplease.com/
 div#stat-tooltip {
   font-size: 10pt;
   position: absolute;
@@ -91,19 +97,18 @@ div#stat-tooltip {
   white-space: nowrap;
   height: auto;
   width: auto;
-  min-height: 24pt;
   pointer-events: none;
 
   &:after {
-    border: 12px solid transparent;
-    border-left-width: 0;
-    border-right-color: rgba(0, 0, 0, 0.7);
+    bottom: 100%;
+    left: 10px;
+    border: 10px solid transparent;
     content: "";
-    display: block;
-    left: -12px;
-    position: absolute;
-    top: 10px;
+    height: 0;
     width: 0;
+    position: absolute;
+    pointer-events: none;
+    border-bottom-color: rgba(0, 0, 0, 0.7);
   }
 
   ul {

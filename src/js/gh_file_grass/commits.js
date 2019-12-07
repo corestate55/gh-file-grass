@@ -25,6 +25,10 @@ class GHLogCommit {
     return `<span class="files">${value}</span>`
   }
 
+  _codeStr(value) {
+    return `<code>${value}</code>`
+  }
+
   _statTotalStr() {
     const st = this.stat_total // shortening alias
     const file = `${st.files} changed ${st.files > 1 ? 'files' : 'file'}`
@@ -39,7 +43,7 @@ class GHLogCommit {
   tooltipHtml() {
     return [
       '<ul>',
-      this._liStr(this.sha),
+      this._liStr(this._codeStr(this.sha)),
       this._liStr(`${this.author.name} &lt;${this.author.email}&gt;`),
       this._liStr(this.date),
       this._liStr(this.message),

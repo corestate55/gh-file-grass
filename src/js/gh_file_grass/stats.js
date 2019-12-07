@@ -87,6 +87,10 @@ class GHLogStat {
     return `<span class="mod">${value}</span>`
   }
 
+  _codeStr(value) {
+    return `<code>${value}</code>`
+  }
+
   _fileActionStr() {
     const space = '&nbsp;&nbsp;'
     const markedStr = (mark, str) => [mark, str].join(space)
@@ -110,7 +114,7 @@ class GHLogStat {
     if (!this.isModified()) {
       return ''
     }
-    return this._liStr(`${this.src}..${this.dst} ${this.mode}`)
+    return this._liStr(this._codeStr(`${this.src}..${this.dst} ${this.mode}`))
   }
 
   _statIndicatorStr() {
@@ -123,7 +127,7 @@ class GHLogStat {
   tooltipHtml() {
     return [
       '<ul>',
-      this._liStr(this.sha_short),
+      this._liStr(this._codeStr(this.sha_short)),
       this._liStr(this._fileActionStr()),
       this._liStr(this._statIndicatorStr()),
       this._diffIndexStr(), // empty for no-diff stat

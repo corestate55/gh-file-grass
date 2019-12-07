@@ -11,7 +11,7 @@ export default class GHFileGrass extends GHFileGrassOperator {
     this._makeCommitLabels()
 
     this._makeFileLifeStatsRect()
-    this._makeStatsRect()
+    this._makeStatRects()
     this._makeStatsArrow() // must be after making stats-rect
 
     this._addFilesHandler()

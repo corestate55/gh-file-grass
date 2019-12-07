@@ -3,6 +3,38 @@ import { scaleLinear } from 'd3-scale'
 import GHFileGrassBase from './base'
 
 export default class GHFileGrassBuilder extends GHFileGrassBase {
+  _fileClass(index) {
+    return `file${index}`
+  }
+
+  _fileLabelId(index) {
+    return `${this._fileClass(index)}-label`
+  }
+
+  _commitClass(index) {
+    return `commit${index}`
+  }
+
+  _commitLabelId(index) {
+    return `${this._commitClass(index)}-label`
+  }
+
+  _statClass(index) {
+    return `stat${index}`
+  }
+
+  _statRectId(index) {
+    return this._statClass(index)
+  }
+
+  _commitHistorgramId(index) {
+    return `${this._fileClass(index)}-histogram`
+  }
+
+  _modClass(index) {
+    return `mod${index}`
+  }
+
   _makeFileLabels() {
     this._selectClippedGroup('files')
       .selectAll('text.file-label')
@@ -12,8 +44,8 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .attr('xlink:href', d => `${this.origin}/blob/${this.branch}/${d.name}`)
       .attr('target', '_blank')
       .append('text')
-      .attr('id', d => `file-${d.index}-label`)
-      .attr('class', d => `file-label file-${d.index}`)
+      .attr('id', d => this._fileLabelId(d.index))
+      .attr('class', d => `file-label ${this._fileClass(d.index)}`)
       .attr('x', d => this._px(0, d))
       .attr('y', d => this._py(d.index, d))
       .attr('dy', this.fontSize)
@@ -29,11 +61,12 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .attr('xlink:href', d => `${this.origin}/commit/${d.sha}`)
       .attr('target', '_blank')
       .append('text')
-      .attr('id', d => `commit-${d.index}-label`)
-      .attr('class', d => `commit-label commit-${d.index}`)
+      .attr('id', d => this._commitLabelId(d.index))
+      .attr('class', d => `commit-label ${this._commitClass(d.index)}`)
       .attr('x', d => this._px(d.index, d))
       .attr('y', d => this._py(0, d))
-      .attr('dx', this.fontSize)
+      .attr('dx', this.fontSize / 2)
+      .attr('dy', this.fontSize / 2)
       .attr('transform', d => `rotate(-60,${d.px},${d.py})`)
       .text(d => d.sha_short)
   }
@@ -82,7 +115,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
         })
       )
       const classBy = d =>
-        ['file-life', `file-${d.fileIndex}`, `commit-${d.commitIndex}`].join(
+        ['file-life', this._fileClass(d.fileIndex), this._commitClass(d.commitIndex)].join(
           ' '
         )
 
@@ -99,16 +132,16 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
     }
   }
 
-  _makeStatsRect() {
+  _makeStatRects() {
     const classBy = d => {
       d.fileIndex = this.files.indexOf(d.path)
       d.commitIndex = this.commits.indexOf(d.sha_short)
       return [
         'stats',
-        `stat-${d.index}`,
-        `file-${d.fileIndex}`,
-        `commit-${d.commitIndex}`,
-        `mod-${d.modifiedClass}`
+        this._statClass(d.index),
+        this._fileClass(d.fileIndex),
+        this._commitClass(d.commitIndex),
+        this._modClass(d.modifiedClass)
       ].join(' ')
     }
 
@@ -118,6 +151,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .data(this.stats.stats)
       .enter()
       .append('rect')
+      .attr('id', d => this._statRectId(d.index))
       .attr('class', classBy)
       .attr('x', d => this._rectX(d))
       .attr('y', d => this._rectY(d))
@@ -180,7 +214,8 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .data(commitHist)
       .enter()
       .append('rect')
-      .attr('class', d => `file-${d.index} commit-hist`)
+      .attr('id', d => this._commitHistorgramId(d.index))
+      .attr('class', d => `commit-hist ${this._fileClass(d.index)}`)
       .attr('x', this.px0 * basePosRatio)
       .attr('y', d => this._py(d.index, d))
       .attr('width', d => xScale(d.hist))
