@@ -9,28 +9,16 @@ export default class GHLogStats {
     this._classifyByLog10ModifiedLines()
   }
 
-  isSamePathDstStat(stat) {
-    const dstStats = this.findAllDstOf(stat)
-    if (dstStats.length < 1) {
-      return false
-    }
-    const results = dstStats.map(dstStat => {
-      return dstStat.isRenamed() || stat.path !== dstStat.path
-    })
-    // if exists false in results: stat has NOT-RENAMED destination in dstStats.
-    return results.reduce((acc, curr) => acc && curr, true)
-  }
-
-  findAllByPath(file) {
-    return this.stats.filter(d => d.path === file)
-  }
-
   findByFileAndType(file, type) {
     return this.stats.find(d => d.path === file && d.type === type)
   }
 
   findByFileAndRenamed(file) {
     return this.stats.find(d => d.path === file && d.isRenamed())
+  }
+
+  findByDstAndRenamed(file) {
+    return this.stats.find(d => d.stat_path.dst === file && d.isRenamed())
   }
 
   findAllDstOf(stat) {

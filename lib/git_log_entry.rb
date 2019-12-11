@@ -11,13 +11,7 @@ class GitLogEntry
     @diff_stat_total = diff.stats[:total]
     @diff_stat_files = diff.stats[:files]
     # warn "diff_stat_files: #{@diff_stat_files}"
-
-    @diff_files = diff.map do |diff_file|
-      diff_stat_path = find_diff_stat(diff_file.path)
-      diff_stat = @diff_stat_files[diff_stat_path]
-      parsed_diff_stat_path = parse_moved_file(diff_stat_path)
-      GitLogEntryFile.new(diff_file, diff_stat, parsed_diff_stat_path)
-    end
+    @diff_files = diff_files_from(diff)
     # debug_print
   end
 
@@ -55,13 +49,21 @@ class GitLogEntry
     { path: path, src: src, dst: dst }
   end
 
+  def diff_files_from(diff)
+    diff.map do |diff_file|
+      diff_stat_path = find_diff_stat(diff_file.path)
+      diff_stat = @diff_stat_files[diff_stat_path]
+      parsed_diff_stat_path = parse_moved_file(diff_stat_path)
+      GitLogEntryFile.new(diff_file, diff_stat, parsed_diff_stat_path)
+    end
+  end
+
   def params_from(stats_path, changed, be_src, be_dst)
     src = stats_path.sub(changed, be_src || '')
     dst = stats_path.sub(changed, be_dst || '')
     [stats_path, changed, src, dst]
   end
 
-  # rubocop:disable Metrics/MethodLength
   def parse_moved_file(stats_path)
     case stats_path
     when /({(.+)? => (.+)?})/
@@ -74,7 +76,6 @@ class GitLogEntry
       make_stats_path(stats_path, '', stats_path, stats_path) # dummy
     end
   end
-  # rubocop:enable Metrics/MethodLength
 
   def find_diff_stat(path)
     @diff_stat_files.each_key.find do |k|
