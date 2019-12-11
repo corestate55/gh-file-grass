@@ -78,7 +78,7 @@ class GitLog
     #   `diff_parent` for the log returns "diff initial-commit current".
     commits = @git.log(@count)
                   .reject { |log| log.parent.nil? }
-                  .map { |log| GitLogEntry.new(log).to_data }
+                  .map { |log| GitLogEntry.new(log, @git).to_data }
     commits.each_with_index { |commit, i| commit[:index] = commits.length - i }
     commits
   end
@@ -121,11 +121,8 @@ class GitLog
     # and delete [stat][files] it was followed as @stats array.
     @commits.each do |commit|
       commit[:stat_total] = commit[:stat][:total] # rename
-      # invert ins/del
-      be_ins = commit[:stat][:total][:deletions]
-      be_del = commit[:stat][:total][:insertions]
-      commit[:stat_total][:insertions] = be_ins
-      commit[:stat_total][:deletions] = be_del
+      commit[:stat_total][:insertions] = commit[:stat][:total][:insertions]
+      commit[:stat_total][:deletions] = commit[:stat][:total][:deletions]
       # delete unused key
       commit.delete(:stat)
     end

@@ -4,15 +4,15 @@ require_relative './git_log_entry_file'
 
 # a log entry
 class GitLogEntry
-  def initialize(log)
+  def initialize(log, git)
     @log = log
 
-    diff = @log.diff_parent
+    diff = git.diff(@log.parent.sha, @log.sha)
     @diff_stat_total = diff.stats[:total]
     @diff_stat_files = diff.stats[:files]
     # warn "diff_stat_files: #{@diff_stat_files}"
 
-    @diff_files = @log.diff_parent.map do |diff_file|
+    @diff_files = diff.map do |diff_file|
       diff_stat_path = find_diff_stat(diff_file.path)
       diff_stat = @diff_stat_files[diff_stat_path]
       parsed_diff_stat_path = parse_moved_file(diff_stat_path)
@@ -55,13 +55,6 @@ class GitLogEntry
     { path: path, src: src, dst: dst }
   end
 
-  def make_inverted_stats_path(path, changed, src, dst)
-    # invert src/dst
-    inverted_changed = "{#{dst} => #{src}}"
-    inverted_path = path.sub(changed, inverted_changed)
-    [inverted_path, inverted_changed, dst, src]
-  end
-
   def params_from(stats_path, changed, be_src, be_dst)
     src = stats_path.sub(changed, be_src || '')
     dst = stats_path.sub(changed, be_dst || '')
@@ -73,12 +66,10 @@ class GitLogEntry
     case stats_path
     when /({(.+)? => (.+)?})/
       md = Regexp.last_match
-      inv_paths = make_inverted_stats_path(stats_path, md[1], md[2], md[3])
-      make_stats_path(*params_from(*inv_paths))
+      make_stats_path(*params_from(stats_path, md[1], md[2], md[3]))
     when /((.+) => (.+))/
       md = Regexp.last_match
-      inv_paths = make_inverted_stats_path(stats_path, md[1], md[2], md[3])
-      make_stats_path(*inv_paths)
+      make_stats_path(stats_path, md[1], md[2], md[3])
     else
       make_stats_path(stats_path, '', stats_path, stats_path) # dummy
     end
@@ -88,8 +79,7 @@ class GitLogEntry
   def find_diff_stat(path)
     @diff_stat_files.each_key.find do |k|
       file_path = parse_moved_file(k)
-      # file_path[:src] == path
-      file_path[:dst] == path # invert src/dst
+      file_path[:src] == path
     end
   end
 end
