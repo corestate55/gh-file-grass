@@ -8,6 +8,10 @@ export default class GHLogCommits {
     this.sort()
   }
 
+  find(shaShort) {
+    return this.commits.find(d => d.sha_short === shaShort)
+  }
+
   sort() {
     this.commits.sort((a, b) => a.index - b.index)
   }

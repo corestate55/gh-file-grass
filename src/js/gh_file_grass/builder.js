@@ -27,12 +27,16 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
     return this._statClass(index)
   }
 
-  _commitHistorgramId(index) {
+  _commitHistogramId(index) {
     return `${this._fileClass(index)}-histogram`
   }
 
   _modClass(index) {
     return `mod${index}`
+  }
+
+  _ghUri(...pathList) {
+    return [this.origin].concat(pathList).join('/')
   }
 
   _makeFileLabels() {
@@ -41,7 +45,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .data(this.files.all)
       .enter()
       .append('a')
-      .attr('xlink:href', d => `${this.origin}/blob/${this.branch}/${d.name}`)
+      .attr('xlink:href', d => this._ghUri('blob', this.branch, d.name))
       .attr('target', '_blank')
       .append('text')
       .attr('id', d => this._fileLabelId(d.index))
@@ -58,7 +62,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .data(this.commits.all)
       .enter()
       .append('a')
-      .attr('xlink:href', d => `${this.origin}/commit/${d.sha}`)
+      .attr('xlink:href', d => this._ghUri('commit', d.sha))
       .attr('target', '_blank')
       .append('text')
       .attr('id', d => this._commitLabelId(d.index))
@@ -147,11 +151,19 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
         this._commitClass(d.commitIndex),
         this._modClass(d.modifiedClass)
       ].join(' ')
+    const sha = d => {
+      const c = this.commits.find(d.sha_short)
+      return c ? c.sha : ''
+    }
 
     this._selectClippedGroup('stats')
       .selectAll('rect.stats')
       .data(this.stats.all)
       .enter()
+      .append('a')
+      .attr('xlink:href', d => this._ghUri('tree', sha(d), d.stat_path.dst))
+      .attr('target', '_blank')
+      .attr('class', 'stats')
       .append('rect')
       .attr('id', d => this._statRectId(d.index))
       .attr('class', classBy)
@@ -203,7 +215,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .selectAll('path.stat-arrow')
       .data(arrows)
       .enter()
-      .insert('path', 'rect.stats') // paths be under stats-rect
+      .insert('path', 'a.stats') // paths be under stats-rect
       .attr('class', classBy)
       .attr('d', d => this.statsLink(d))
   }
@@ -230,7 +242,7 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .data(commitHist)
       .enter()
       .append('rect')
-      .attr('id', d => this._commitHistorgramId(d.index))
+      .attr('id', d => this._commitHistogramId(d.index))
       .attr('class', classBy)
       .attr('x', this.px0 * basePosRatio)
       .attr('y', d => this._py(d.index, d))

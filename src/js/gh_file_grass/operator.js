@@ -125,7 +125,7 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
         this._selectFile(d.index, this._addSelected)
         this._enableTooltip(
           this._historgramToolTipHtml(d),
-          this._commitHistorgramId(d.index)
+          this._commitHistogramId(d.index)
         )
       })
       .on('mouseout', d => {
