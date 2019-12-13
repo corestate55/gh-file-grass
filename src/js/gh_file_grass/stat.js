@@ -8,6 +8,7 @@ export default class GHLogStat extends GHInfoBase {
     this.type = stat.type
     this.src = stat.src
     this.dst = stat.dst
+    this.bin = stat.bin
     this.stat_path = stat.stat_path
     this.insertions = stat.insertions
     this.deletions = stat.deletions
@@ -69,9 +70,12 @@ export default class GHLogStat extends GHInfoBase {
   }
 
   _statIndicatorStr() {
+    const bar = this._statBarStr(this.insertions, this.deletions)
+    if (this.bin) {
+      return `BIN ${bar}`
+    }
     const ins = '+' + this.insertions
     const del = '-' + this.deletions
-    const bar = this._statBarStr(this.insertions, this.deletions)
     return `${this._insStr(ins)}, ${this._delStr(del)} ${bar} (${this.lines})`
   }
 

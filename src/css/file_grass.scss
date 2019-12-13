@@ -30,13 +30,6 @@ text {
   }
 }
 
-%rect-base {
-  fill-opacity: 0.6;
-  &.selected {
-    fill-opacity: 1.0;
-  }
-}
-
 rect {
   &.stats {
     &.mod1 {
@@ -58,13 +51,18 @@ rect {
   }
 
   &.file-life {
-    @extend %rect-base;
-    fill: #CACFD2;
+    fill: #ebedf0;
+    &.selected {
+      fill: #d3d8de;
+    }
   }
 
   &.commit-hist {
-    @extend %rect-base;
     fill: $base-color;
+    fill-opacity: 0.6;
+    &.selected {
+      fill-opacity: 1.0;
+    }
   }
 }
 

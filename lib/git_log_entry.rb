@@ -8,10 +8,13 @@ class GitLogEntry
     @log = log
 
     diff = git.diff(@log.parent.sha, @log.sha)
-    @diff_stat_total = diff.stats[:total]
-    @diff_stat_files = diff.stats[:files]
-    # warn "diff_stat_files: #{@diff_stat_files}"
-    @diff_files = diff_files_from(diff)
+    # diff.stats =>
+    #   {total: {insertions: XX, deletions: XX, lines: XX, files: XX},
+    #    files: [{'path/to/file1' => {insertions: XX, deletions: XX},
+    #            {'path/to/file2' => {insertions: XX, deletions: XX},...]}
+    @stats_total = diff.stats[:total]
+    @stat_of_file = diff.stats[:files]
+    @diff_files = log_entry_files_from(diff)
     # debug_print
   end
 
@@ -27,7 +30,7 @@ class GitLogEntry
       date: @log.date,
       message: @log.message,
       stat: {
-        total: @diff_stat_total,
+        total: @stats_total,
         files: @diff_files.map(&:to_data)
       }
     }
@@ -45,42 +48,57 @@ class GitLogEntry
     end
   end
 
-  def make_stats_path(path, _changed, src, dst)
+  def log_entry_files_from(diff)
+    # convert moved(renamed) file path in `@stat_of_file`.
+    stat_of = convert_stat_of_file
+    diff.map do |diff_file|
+      # diff_file is a Git::Diff::DiffFile class instance
+      # It has...
+      #   - path: file path
+      #   - patch: diff body
+      #   - mode: file permission
+      #   - src: diff hash
+      #   - dst: diff hash
+      #   - type: new/modified/deleted
+      #   - #binary?
+      stat = stat_of[diff_file.path][:stat]
+      parsed_stat_path = stat_of[diff_file.path][:stat_path]
+      GitLogEntryFile.new(diff_file, stat, parsed_stat_path)
+    end
+  end
+
+  def make_stat_path(path, _changed, src, dst)
     { path: path, src: src, dst: dst }
   end
 
-  def diff_files_from(diff)
-    diff.map do |diff_file|
-      diff_stat_path = find_diff_stat(diff_file.path)
-      diff_stat = @diff_stat_files[diff_stat_path]
-      parsed_diff_stat_path = parse_moved_file(diff_stat_path)
-      GitLogEntryFile.new(diff_file, diff_stat, parsed_diff_stat_path)
-    end
+  def params_from(path, changed, be_src, be_dst)
+    src = path.sub(changed, be_src || '')
+    dst = path.sub(changed, be_dst || '')
+    [path, changed, src, dst]
   end
 
-  def params_from(stats_path, changed, be_src, be_dst)
-    src = stats_path.sub(changed, be_src || '')
-    dst = stats_path.sub(changed, be_dst || '')
-    [stats_path, changed, src, dst]
-  end
-
-  def parse_moved_file(stats_path)
-    case stats_path
+  def parse_moved_path(path)
+    case path
     when /({(.+)? => (.+)?})/
       md = Regexp.last_match
-      make_stats_path(*params_from(stats_path, md[1], md[2], md[3]))
+      make_stat_path(*params_from(path, md[1], md[2], md[3]))
     when /((.+) => (.+))/
       md = Regexp.last_match
-      make_stats_path(stats_path, md[1], md[2], md[3])
+      make_stat_path(path, md[1], md[2], md[3])
     else
-      make_stats_path(stats_path, '', stats_path, stats_path) # dummy
+      make_stat_path(path, '', path, path) # dummy
     end
   end
 
-  def find_diff_stat(path)
-    @diff_stat_files.each_key.find do |k|
-      file_path = parse_moved_file(k)
-      file_path[:src] == path
+  def convert_stat_of_file
+    parsed = @stat_of_file.map do |path, stat|
+      # A key of `@stat_of_file` includes '{src=>dst}' when the file was moved.
+      # Convert `{src=>dst}` style path to {path:, src:, dst:}
+      parsed_path = parse_moved_path(path)
+      # For moved file {src=>dst},
+      # `diff_file.path` (in diff.map) correspond with src path.
+      [parsed_path[:src], { stat: stat, stat_path: parsed_path }]
     end
+    parsed.to_h
   end
 end

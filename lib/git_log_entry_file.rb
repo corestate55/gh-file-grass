@@ -20,6 +20,7 @@ class GitLogEntryFile
       type: @file.type,
       src: @file.src,
       dst: @file.dst,
+      bin: @file.binary?,
       stat_path: @stat_path,
       insertions: @stat[:insertions],
       deletions: @stat[:deletions],
