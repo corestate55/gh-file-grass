@@ -2,6 +2,8 @@
 
 A visualizer of git repository statistics like the 'github grass'.
 
+![Demo](./public/demo01c.gif)
+
 ## Requirements
 
 This repository includes two tools.
