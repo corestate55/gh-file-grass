@@ -150,45 +150,72 @@ export default class GHFileGrassOperator extends GHBarChartBuilder {
       })
   }
 
-  _addDragToGroups() {
-    const dragged = () => {
-      this._selectClippedGroup('commits')
-        .selectAll('text')
-        .attr('x', d => (d.px += event.dx))
-        .attr('transform', d => `rotate(-60,${d.px},${d.py})`)
-      this._selectClippedGroup('files')
-        .selectAll('text')
-        .attr('y', d => (d.py += event.dy))
-      this._selectClippedGroup('stats')
-        .selectAll('rect')
-        .attr('x', d => (d.px += event.dx))
-        .attr('y', d => (d.py += event.dy))
-      this._selectClippedGroup('stats')
-        .selectAll('path')
-        .attr('d', d => {
-          d.source[0] += event.dx
-          d.source[1] += event.dy
-          d.target[0] += event.dx
-          d.target[1] += event.dy
-          return this.statsLink(d)
-        })
-      this._selectClippedGroup('files')
-        .selectAll('rect')
-        .attr('y', d => (d.py += event.dy))
-      this._selectClippedGroup('commits')
-        .selectAll('rect')
-        .attr('x', d => (d.px += event.dx))
-    }
+  _dragAll(dx, dy) {
+    this._selectClippedGroup('commits')
+      .selectAll('text')
+      .attr('x', d => (d.px += dx))
+      .attr('transform', d => `rotate(-60,${d.px},${d.py})`)
+    this._selectClippedGroup('files')
+      .selectAll('text')
+      .attr('y', d => (d.py += dy))
+    this._selectClippedGroup('stats')
+      .selectAll('rect')
+      .attr('x', d => (d.px += dx))
+      .attr('y', d => (d.py += dy))
+    this._selectClippedGroup('stats')
+      .selectAll('path')
+      .attr('d', d => {
+        d.source[0] += dx
+        d.source[1] += dy
+        d.target[0] += dx
+        d.target[1] += dy
+        return this.statsLink(d)
+      })
+    this._selectClippedGroup('files')
+      .selectAll('rect')
+      .attr('y', d => (d.py += dy))
+    this._selectClippedGroup('commits')
+      .selectAll('rect')
+      .attr('x', d => (d.px += dx))
+  }
 
-    // NOTICE: insert before 'g' (group of clipped-stats)
-    // to enable stats-rect event handling.
+  // NOTICE: In `addDragTo` functions,
+  // insert drag-handler rect before 'g' (clipped-group)
+  // to prevent to cover (and disable) stat-rect event.
+  _addDragToCommitsGroup() {
+    const dragged = () => this._dragAll(event.dx, 0)
+
+    this._selectGroup('commits')
+      .insert('rect', 'g')
+      .attr('id', 'commits-drag-handler')
+      .attr('class', 'drag-handler')
+      .attr('y', -this.py0 * this.cBaseRatio)
+      .attr('width', this.width1)
+      .attr('height', this.py0)
+      .call(drag().on('drag', dragged))
+  }
+
+  _addDragToFilesGroup() {
+    const dragged = () => this._dragAll(0, event.dy)
+
+    this._selectGroup('files')
+      .insert('rect', 'g')
+      .attr('id', 'files-drag-handler')
+      .attr('class', 'drag-handler')
+      .attr('width', this.px0)
+      .attr('height', this.height1)
+      .call(drag().on('drag', dragged))
+  }
+
+  _addDragToStatsGroup() {
+    const dragged = () => this._dragAll(event.dx, event.dy)
+
     this._selectGroup('stats')
       .insert('rect', 'g')
-      .attr('id', 'pointer-event-handler')
+      .attr('id', 'stats-drag-handler')
+      .attr('class', 'drag-handler')
       .attr('width', this.width1)
       .attr('height', this.height1)
-      .style('fill', 'none')
-      .style('pointer-events', 'all')
       .call(drag().on('drag', dragged))
   }
 }

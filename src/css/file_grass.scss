@@ -181,3 +181,8 @@ svg.action {
     }
   }
 }
+
+.drag-handler {
+  fill: none;
+  pointer-events: all;
+}

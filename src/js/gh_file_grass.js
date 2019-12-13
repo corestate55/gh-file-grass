@@ -22,6 +22,8 @@ export default class GHFileGrass extends GHFileGrassOperator {
     this._addCommitHistogramHandler()
     this._addCommitLinesChartHandler()
 
-    this._addDragToGroups()
+    this._addDragToCommitsGroup()
+    this._addDragToFilesGroup()
+    this._addDragToStatsGroup()
   }
 }
