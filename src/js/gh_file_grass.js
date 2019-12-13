@@ -6,6 +6,7 @@ export default class GHFileGrass extends GHFileGrassOperator {
     this._makeSVGCanvas()
 
     this._makeCommitHistogram()
+    this._makeCommitLinesChart()
 
     this._makeFileLabels()
     this._makeCommitLabels()
@@ -19,6 +20,8 @@ export default class GHFileGrass extends GHFileGrassOperator {
     this._addStatsHandler()
     this._addStatsArrowHandler()
     this._addCommitHistogramHandler()
+    this._addCommitLinesChartHandler()
+
     this._addDragToGroups()
   }
 }

@@ -1,5 +1,4 @@
 import { linkHorizontal } from 'd3-shape'
-import { scaleLinear } from 'd3-scale'
 import GHFileGrassBase from './base'
 
 export default class GHFileGrassBuilder extends GHFileGrassBase {
@@ -27,11 +26,8 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
     return this._statClass(index)
   }
 
-  _commitHistogramId(index) {
-    return `${this._fileClass(index)}-histogram`
-  }
-
   _modClass(index) {
+    // specify color style of 'file-grass'
     return `mod${index}`
   }
 
@@ -218,35 +214,5 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
       .insert('path', 'a.stats') // paths be under stats-rect
       .attr('class', classBy)
       .attr('d', d => this.statsLink(d))
-  }
-
-  _makeCommitHistogramData() {
-    return this.files.all.map(d => ({
-      index: d.index,
-      name: d.name, // for debug
-      hist: d.commits.length
-    }))
-  }
-
-  _makeCommitHistogram() {
-    const commitHist = this._makeCommitHistogramData()
-    const basePosRatio = 0.7
-    const xScale = scaleLinear()
-      .domain([0, Math.max(...commitHist.map(d => d.hist))])
-      .range([0, (1 - basePosRatio) * this.px0])
-    const classBy = d =>
-      ['commit-hist', `${this._fileClass(d.index)}`].join(' ')
-
-    this._selectClippedGroup('files')
-      .selectAll('rect.commit-hist')
-      .data(commitHist)
-      .enter()
-      .append('rect')
-      .attr('id', d => this._commitHistogramId(d.index))
-      .attr('class', classBy)
-      .attr('x', this.px0 * basePosRatio)
-      .attr('y', d => this._py(d.index, d))
-      .attr('width', d => xScale(d.hist))
-      .attr('height', this.lc)
   }
 }

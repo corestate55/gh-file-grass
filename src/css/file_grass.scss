@@ -30,6 +30,14 @@ text {
   }
 }
 
+%chart-select {
+  stroke: none;
+  &.selected {
+    stroke-width: 1pt;
+    stroke: $strong-stroke-color;
+  }
+}
+
 rect {
   &.stats {
     &.mod1 {
@@ -59,9 +67,25 @@ rect {
 
   &.commit-hist {
     fill: $base-color;
-    fill-opacity: 0.6;
-    &.selected {
-      fill-opacity: 1.0;
+    @extend %chart-select;
+  }
+
+  &.commit-chart {
+    @extend %chart-select;
+    &.rank0 {
+      fill: #deede7;
+    }
+    &.rank1 {
+      fill: #acd2c2;
+    }
+    &.rank2 {
+      fill: #7ab89e;
+    }
+    &.rank3 {
+      fill: #509578;
+    }
+    &.rank4 {
+      fill: #366350;
     }
   }
 }

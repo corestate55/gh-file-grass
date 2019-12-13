@@ -7,7 +7,7 @@ import GHLogStats from './stats'
 export default class GHFileGrassBase {
   constructor() {
     this.fontSize = 10
-    this.py0 = 100
+    this.py0 = 120
     this.lc = this.fontSize * 1.2
     this.dc = this.fontSize * 0.4
   }
@@ -43,14 +43,15 @@ export default class GHFileGrassBase {
   }
 
   _makeGroups() {
+    this.cBaseRatio = 0.6 // commit base position
     const groupData = [
       {
         keyword: 'commits',
         px: this.px0,
-        py: this.py0,
+        py: this.py0 * this.cBaseRatio,
         clipPath: {
           x: 0,
-          y: -this.py0,
+          y: -this.py0 * this.cBaseRatio,
           width: this.width1,
           height: this.py0
         }

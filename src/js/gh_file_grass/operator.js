@@ -1,8 +1,8 @@
 import { select, event } from 'd3-selection'
 import { drag } from 'd3-drag'
-import GHFileGrassBuilder from './builder'
+import GHBarChartBuilder from './chart_builder'
 
-export default class GHFileGrassOperator extends GHFileGrassBuilder {
+export default class GHFileGrassOperator extends GHBarChartBuilder {
   _selectObject(classStr, callback) {
     const selection = this.svg.selectAll(`.${classStr}`)
     callback(selection)
@@ -114,7 +114,7 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       .on('mouseout', mouseOut)
   }
 
-  _historgramToolTipHtml(d) {
+  _histogramToolTipHtml(d) {
     return `${d.hist} ${d.hist > 1 ? 'commits' : 'commit'}`
   }
 
@@ -124,12 +124,28 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       .on('mouseover', d => {
         this._selectFile(d.index, this._addSelected)
         this._enableTooltip(
-          this._historgramToolTipHtml(d),
+          this._histogramToolTipHtml(d),
           this._commitHistogramId(d.index)
         )
       })
       .on('mouseout', d => {
         this._selectFile(d.index, this._removeSelected)
+        this._disableTooltip()
+      })
+  }
+
+  _addCommitLinesChartHandler() {
+    this._selectClippedGroup('commits')
+      .selectAll('rect.commit-chart')
+      .on('mouseover', d => {
+        this._selectCommit(d.index, this._addSelected)
+        this._enableTooltip(
+          d.commit.tooltipHtml(),
+          this._commitLinesChartId(d.index)
+        )
+      })
+      .on('mouseout', d => {
+        this._selectCommit(d.index, this._removeSelected)
         this._disableTooltip()
       })
   }
@@ -159,6 +175,9 @@ export default class GHFileGrassOperator extends GHFileGrassBuilder {
       this._selectClippedGroup('files')
         .selectAll('rect')
         .attr('y', d => (d.py += event.dy))
+      this._selectClippedGroup('commits')
+        .selectAll('rect')
+        .attr('x', d => (d.px += event.dx))
     }
 
     // NOTICE: insert before 'g' (group of clipped-stats)
