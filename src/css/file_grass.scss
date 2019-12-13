@@ -1,4 +1,5 @@
 $base-color: #7ab89e;
+$base-font-size: 10pt;
 $strong-stroke-color: #ec939a;
 
 %selected-label {
@@ -12,7 +13,7 @@ code {
 }
 
 text {
-  font-size: 10pt;
+  font-size: $base-font-size;
 
   &.file-label {
     text-anchor: start;
@@ -110,7 +111,7 @@ $modified-color: #f9d86c; // #dbab09; // original
 
 // ref. http://www.cssarrowplease.com/
 div#stat-tooltip {
-  font-size: 10pt;
+  font-size: $base-font-size;
   position: absolute;
   background-color: rgba(0, 0, 0, 0.7);
   padding: 5pt;
@@ -158,6 +159,22 @@ div#stat-tooltip {
     }
     &.mod {
       color: $modified-color;
+    }
+
+    &.stat-box {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin-left: 2px;
+      &.ins {
+        background-color: $added-color;
+      }
+      &.del {
+        background-color: $deleted-color;
+      }
+      &.keep {
+        background-color: $keep-color;
+      }
     }
   }
 }

@@ -27,9 +27,8 @@ export default class GHLogStat extends GHInfoBase {
 
   _statBarStr(ins, del) {
     const total = ins + del
-    const box = '■'
     const barStr = (classStr, count) => {
-      return `<span class="${classStr}">${box.repeat(count)}</span>`
+      return `<span class="stat-box ${classStr}"></span>`.repeat(count)
     }
     const cal = (val, total) => {
       return total <= 5 ? val : Math.floor(val / (total / 5))
