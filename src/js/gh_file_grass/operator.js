@@ -179,43 +179,24 @@ export default class GHFileGrassOperator extends GHBarChartBuilder {
       .attr('x', d => (d.px += dx))
   }
 
-  // NOTICE: In `addDragTo` functions,
-  // insert drag-handler rect before 'g' (clipped-group)
-  // to prevent to cover (and disable) stat-rect event.
-  _addDragToCommitsGroup() {
-    const dragged = () => this._dragAll(event.dx, 0)
-
-    this._selectGroup('commits')
-      .insert('rect', 'g')
-      .attr('id', 'commits-drag-handler')
-      .attr('class', 'drag-handler')
-      .attr('y', -this.py0 * this.cBaseRatio)
-      .attr('width', this.width1)
-      .attr('height', this.py0)
-      .call(drag().on('drag', dragged))
-  }
-
-  _addDragToFilesGroup() {
-    const dragged = () => this._dragAll(0, event.dy)
-
-    this._selectGroup('files')
-      .insert('rect', 'g')
-      .attr('id', 'files-drag-handler')
-      .attr('class', 'drag-handler')
-      .attr('width', this.px0)
-      .attr('height', this.height1)
-      .call(drag().on('drag', dragged))
-  }
-
-  _addDragToStatsGroup() {
-    const dragged = () => this._dragAll(event.dx, event.dy)
-
-    this._selectGroup('stats')
-      .insert('rect', 'g')
-      .attr('id', 'stats-drag-handler')
-      .attr('class', 'drag-handler')
-      .attr('width', this.width1)
-      .attr('height', this.height1)
-      .call(drag().on('drag', dragged))
+  _addDragToGroups() {
+    const handlerOf = {
+      'commits': () => this._dragAll(event.dx, 0),
+      'files': () => this._dragAll(0, event.dy),
+      'stats': () => this._dragAll(event.dx, event.dy)
+    }
+    for (const area of Object.keys(handlerOf)) {
+      // NOTICE: insert drag-handler rect before 'g' (clipped-group)
+      // to prevent to cover (and disable) stat-rect event.
+      this._selectGroup(area)
+        .insert('rect', 'g')
+        .attr('id', `${area}-drag-handler`)
+        .attr('class', 'drag-handler')
+        .attr('x', d => d.clipPath.x)
+        .attr('y', d => d.clipPath.y)
+        .attr('width', d => d.clipPath.width)
+        .attr('height', d => d.clipPath.height)
+        .call(drag().on('drag', handlerOf[area]))
+    }
   }
 }

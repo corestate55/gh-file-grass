@@ -46,7 +46,7 @@ export default class GHFileGrassBase {
     this.cBaseRatio = 0.6 // commit base position
     const groupData = [
       {
-        keyword: 'commits',
+        area: 'commits',
         px: this.px0,
         py: this.py0 * this.cBaseRatio,
         clipPath: {
@@ -57,7 +57,7 @@ export default class GHFileGrassBase {
         }
       },
       {
-        keyword: 'files',
+        area: 'files',
         px: 0,
         py: this.py0,
         clipPath: {
@@ -68,7 +68,7 @@ export default class GHFileGrassBase {
         }
       },
       {
-        keyword: 'stats',
+        area: 'stats',
         px: this.px0,
         py: this.py0,
         clipPath: {
@@ -84,18 +84,18 @@ export default class GHFileGrassBase {
       .data(groupData)
       .enter()
       .append('g')
-      .attr('id', d => `${d.keyword}-group`)
+      .attr('id', d => `${d.area}-group`)
       .attr('transform', d => `translate(${d.px},${d.py})`)
     groups
       .append('defs')
       .append('SVG:clipPath')
-      .attr('id', d => `${d.keyword}-clip`)
+      .attr('id', d => `${d.area}-clip`)
       .append('rect')
       .attr('x', d => d.clipPath.x)
       .attr('y', d => d.clipPath.y)
       .attr('width', d => d.clipPath.width)
       .attr('height', d => d.clipPath.height)
-    groups.append('g').attr('clip-path', d => `url(#${d.keyword}-clip)`)
+    groups.append('g').attr('clip-path', d => `url(#${d.area}-clip)`)
   }
 
   _makeSVGCanvas() {
@@ -107,11 +107,11 @@ export default class GHFileGrassBase {
     this._makeGroups()
   }
 
-  _selectGroup(keyword) {
-    return this.svg.select(`g#${keyword}-group`)
+  _selectGroup(area) {
+    return this.svg.select(`g#${area}-group`)
   }
 
-  _selectClippedGroup(keyword) {
-    return this._selectGroup(keyword).select('g')
+  _selectClippedGroup(area) {
+    return this._selectGroup(area).select('g')
   }
 }
