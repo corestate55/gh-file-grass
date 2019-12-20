@@ -4,6 +4,11 @@ A visualizer of git repository statistics like the 'github grass'.
 
 ![Demo](./public/demo01c.gif)
 
+## Reference
+
+Blog
+* [Gitリポジトリのファイル変更履歴を可視化してみる \- Qiita](https://qiita.com/corestate55/items/1642f1fa240b76f6585d)
+
 ## Requirements
 
 This repository includes two tools.
