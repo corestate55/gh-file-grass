@@ -47,7 +47,7 @@ npm install
 Run the collector to generate repository data and save the output as name `public/logs.json`,
 because the file name of repository data is hard-corded in visualizer (currently).
 ```
-bundle exec ./bin/log_collector.rb -r /path/to/repository > ./public/logs.json
+bundle exec ruby ./bin/log_collector.rb -r /path/to/repository > ./public/logs.json
 ```
 
 Options:
