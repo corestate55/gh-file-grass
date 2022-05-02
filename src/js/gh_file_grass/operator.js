@@ -1,4 +1,4 @@
-import { select, event } from 'd3-selection'
+import { select } from 'd3-selection'
 import { drag } from 'd3-drag'
 import GHBarChartBuilder from './chart_builder'
 
@@ -29,8 +29,8 @@ export default class GHFileGrassOperator extends GHBarChartBuilder {
   }
 
   _addFilesHandler() {
-    const mouseOver = d => this._selectFile(d.index, this._addSelected)
-    const mouseOut = d => this._selectFile(d.index, this._removeSelected)
+    const mouseOver = (_ev, d) => this._selectFile(d.index, this._addSelected)
+    const mouseOut = (_ev, d) => this._selectFile(d.index, this._removeSelected)
     this._selectClippedGroup('files')
       .selectAll('text')
       .on('mouseover', mouseOver)
@@ -38,11 +38,11 @@ export default class GHFileGrassOperator extends GHBarChartBuilder {
   }
 
   _addCommitsHandler() {
-    const mouseOver = d => {
+    const mouseOver = (_ev, d) => {
       this._selectCommit(d.index, this._addSelected)
       this._enableTooltip(d.tooltipHtml(), this._commitLabelId(d.index))
     }
-    const mouseOut = d => {
+    const mouseOut = (_ev, d) => {
       this._selectCommit(d.index, this._removeSelected)
       this._disableTooltip()
     }
@@ -75,7 +75,7 @@ export default class GHFileGrassOperator extends GHBarChartBuilder {
   }
 
   _addStatsHandler() {
-    const mouseOver = d => {
+    const mouseOver = (_ev, d) => {
       this._selectCommit(d.commitIndex, this._addSelected)
       this._selectFile(d.fileIndex, this._addSelected)
       if (d.index) {
@@ -83,7 +83,7 @@ export default class GHFileGrassOperator extends GHBarChartBuilder {
         this._enableTooltip(d.tooltipHtml(), this._statRectId(d.index))
       }
     }
-    const mouseOut = d => {
+    const mouseOut = (_ev, d) => {
       this._selectCommit(d.commitIndex, this._removeSelected)
       this._selectFile(d.fileIndex, this._removeSelected)
       if (d.index) {
@@ -98,12 +98,12 @@ export default class GHFileGrassOperator extends GHBarChartBuilder {
   }
 
   _addStatsArrowHandler() {
-    const mouseOver = d => {
+    const mouseOver = (_ev, d) => {
       [d.sourceIndex, d.targetIndex].forEach(statIndex => {
         this._selectStat(statIndex, this._addSelected)
       })
     }
-    const mouseOut = d => {
+    const mouseOut = (_ev, d) => {
       [d.sourceIndex, d.targetIndex].forEach(statIndex => {
         this._selectStat(statIndex, this._removeSelected)
       })
@@ -119,35 +119,39 @@ export default class GHFileGrassOperator extends GHBarChartBuilder {
   }
 
   _addCommitHistogramHandler() {
+    const mouseOver = (_ev, d) => {
+      this._selectFile(d.index, this._addSelected)
+      this._enableTooltip(
+        this._histogramToolTipHtml(d),
+        this._commitHistogramId(d.index)
+      )
+    }
+    const mouseOut = (_ev, d) => {
+      this._selectFile(d.index, this._removeSelected)
+      this._disableTooltip()
+    }
     this._selectClippedGroup('files')
       .selectAll('rect.commit-hist')
-      .on('mouseover', d => {
-        this._selectFile(d.index, this._addSelected)
-        this._enableTooltip(
-          this._histogramToolTipHtml(d),
-          this._commitHistogramId(d.index)
-        )
-      })
-      .on('mouseout', d => {
-        this._selectFile(d.index, this._removeSelected)
-        this._disableTooltip()
-      })
+      .on('mouseover', mouseOver)
+      .on('mouseout', mouseOut)
   }
 
   _addCommitLinesChartHandler() {
+    const mouseOver = (_ev, d) => {
+      this._selectCommit(d.index, this._addSelected)
+      this._enableTooltip(
+        d.commit.tooltipHtml(),
+        this._commitLinesChartId(d.index)
+      )
+    }
+    const mouseOut = (_ev, d) => {
+      this._selectCommit(d.index, this._removeSelected)
+      this._disableTooltip()
+    }
     this._selectClippedGroup('commits')
       .selectAll('rect.commit-chart')
-      .on('mouseover', d => {
-        this._selectCommit(d.index, this._addSelected)
-        this._enableTooltip(
-          d.commit.tooltipHtml(),
-          this._commitLinesChartId(d.index)
-        )
-      })
-      .on('mouseout', d => {
-        this._selectCommit(d.index, this._removeSelected)
-        this._disableTooltip()
-      })
+      .on('mouseover', mouseOver)
+      .on('mouseout', mouseOut)
   }
 
   _dragAll(dx, dy) {
@@ -181,9 +185,9 @@ export default class GHFileGrassOperator extends GHBarChartBuilder {
 
   _addDragToGroups() {
     const handlerOf = {
-      'commits': () => this._dragAll(event.dx, 0),
-      'files': () => this._dragAll(0, event.dy),
-      'stats': () => this._dragAll(event.dx, event.dy)
+      'commits': (event) => this._dragAll(event.dx, 0),
+      'files': (event) => this._dragAll(0, event.dy),
+      'stats': (event) => this._dragAll(event.dx, event.dy)
     }
     for (const area of Object.keys(handlerOf)) {
       // NOTICE: insert drag-handler rect before 'g' (clipped-group)

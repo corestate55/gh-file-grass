@@ -32,7 +32,12 @@ export default class GHFileGrassBuilder extends GHFileGrassBase {
   }
 
   _ghUri(...pathList) {
-    return [this.origin].concat(pathList).join('/')
+    let urlBase = this.origin
+    const result = /.+@(.+):(.+)/.exec(this.origin)
+    if (result) {
+      urlBase = `https://${result[1]}/${result[2]}`
+    }
+    return [urlBase].concat(pathList).join('/')
   }
 
   _makeFileLabels() {
